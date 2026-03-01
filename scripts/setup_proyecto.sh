@@ -27,14 +27,20 @@ fi
 # 4. Generar reporte de validación
 echo ">>> Generando reporte..."
 REPORT_FILE="reports/validacion_inicial.txt"
+
 {
-    echo "=== REPORTE DE VALIDACIÓN ==="
-    echo "Fecha: $(date)"
-    echo "Archivo: $DATA_FILE"
-    echo "Tamaño: $(du -h "$DATA_FILE" | cut -f1)"
-    echo "Filas totales: $(wc -l < "$DATA_FILE")"
-    echo "Columnas detectadas: $(head -n1 "$DATA_FILE" | tr ',' '\n' | wc -l)"
-    echo "Valores vacíos: $(grep -c ',,' "$DATA_FILE" || echo 0)"
+  echo "=== REPORTE DE VALIDACIÓN ==="
+  echo "Fecha: $(date)"
+  echo "Archivo: $DATA_FILE"
+  echo "Tamaño: $(du -h "$DATA_FILE" | cut -f1)"
+  echo "Filas totales: $(wc -l < "$DATA_FILE")"
+  echo "Columnas detectadas: $(head -n1 "$DATA_FILE" | tr ',' '\n' | wc -l)"
+  echo "Valores vacíos: $(grep -c ',,' "$DATA_FILE" || echo 0)"
+
+  echo ""
+  echo "Top 3 sensores con más registros:"
+  cut -d',' -f1 "$DATA_FILE" | sort | uniq -c | sort -nr | head -n 3
+
 } > "$REPORT_FILE"
 
 echo ">>> Setup completado. Revisa $REPORT_FILE"

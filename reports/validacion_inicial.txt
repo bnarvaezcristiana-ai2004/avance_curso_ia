@@ -1,8 +1,13 @@
 === REPORTE DE VALIDACIÓN ===
-Fecha: dom 01 mar 2026 12:54:08 -05
+Fecha: dom 01 mar 2026 13:16:04 -05
 Archivo: data/raw/datos_sensores.csv
 Tamaño: 4,0K
 Filas totales: 151
 Columnas detectadas: 5
 Valores vacíos: 0
 0
+
+Top 3 sensores con más registros:
+     10 5.0
+      9 6.3
+      9 5.1
