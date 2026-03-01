@@ -123,6 +123,26 @@ Para descargar los datos y validar el entorno, ejecuta:
 ./scripts/setup_proyecto.sh
 ```
 
+## Resultados del Análisis
+
+### 1. Conteo de especies
+| Especie | Cantidad |
+|---------|----------|
+| setosa | 50 |
+| versicolor | 50 |
+| virginica | 50 |
+
+**Comando:**
+```bash
+tail -n +2 data/raw/datos_sensores.csv | cut -d',' -f5 | sort | uniq -c
+
+## 🐙 PASO 6: Git - 3 Commits Mínimos
+
+### **Commit 1: El script**
+```bash
+git add scripts/setup_proyecto.sh
+git commit -m "feat: agrega script de setup reproducible con descarga de datos"
+
 ## 📄 Licencia
 
 MIT (material académico). Ver LICENSE.

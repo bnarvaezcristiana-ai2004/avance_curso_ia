@@ -1,5 +1,8 @@
-=== Reporte de Validación ===
-Fecha: jue 12 feb 2026 17:39:39 -05
-Filas: 151
-Columnas: 5
-Valores faltantes: 0
+=== REPORTE DE VALIDACIÓN ===
+Fecha: dom 01 mar 2026 12:54:08 -05
+Archivo: data/raw/datos_sensores.csv
+Tamaño: 4,0K
+Filas totales: 151
+Columnas detectadas: 5
+Valores vacíos: 0
+0
