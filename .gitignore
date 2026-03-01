@@ -1,0 +1,30 @@
+# --- SECCIÓN SEMANA 1 (OBLIGATORIO) ---
+# Datos brutos (Nunca subir datos originales)
+data/raw/
+data/interim/
+
+# Logs y temporales del sistema
+*.tmp
+
+# Modelos pesados (para futuras semanas)
+*.pth
+*.h5
+
+# --- TU CONFIGURACIÓN ACTUAL (MANTENER) ---
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv*/
+.ipynb_checkpoints/
+ia_env/       # Agregado: nombre sugerido en la guía
+
+# LaTeX (Útil si compilas el reporte en el mismo repo)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+build/

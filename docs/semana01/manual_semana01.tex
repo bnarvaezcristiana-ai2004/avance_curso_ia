@@ -1,0 +1,975 @@
+\documentclass[12pt, a4paper]{article}
+
+% =====================================================
+% PAQUETES BASE (XeLaTeX)
+% =====================================================
+\usepackage{fontspec}
+\usepackage[spanish, es-tabla, es-noquoting]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+
+% =====================================================
+% GEOMETRÍA
+% =====================================================
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=2.5cm,
+  right=3cm,
+  headheight=15pt
+}
+
+% =====================================================
+% COLORES PROFESIONALES
+% =====================================================
+\definecolor{primary}{RGB}{0, 51, 102}
+\definecolor{accent}{RGB}{46, 139, 87}
+\definecolor{danger}{RGB}{180, 0, 0}
+\definecolor{terminalbg}{RGB}{28, 28, 28}
+\definecolor{terminalfg}{RGB}{135, 255, 0}
+
+% =====================================================
+% CAJAS
+% =====================================================
+\newtcolorbox{agrobox}[1]{
+  colback=accent!5!white,
+  colframe=accent,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.6mm,
+  arc=2mm,
+  enhanced
+}
+
+\newtcolorbox{infobox}[1]{
+  colback=primary!5!white,
+  colframe=primary,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.6mm,
+  arc=2mm,
+  enhanced
+}
+
+\newtcolorbox{warningbox}[1]{
+  colback=danger!5!white,
+  colframe=danger,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.6mm,
+  arc=2mm,
+  enhanced
+}
+
+% =====================================================
+% ESTILO DE CÓDIGO
+% =====================================================
+\lstdefinestyle{bashstyle}{
+  backgroundcolor=\color{terminalbg},
+  basicstyle=\ttfamily\footnotesize\color{terminalfg},
+  breaklines=true,
+  language=bash,
+  showstringspaces=false,
+  keywordstyle=\color{cyan},
+  commentstyle=\color{gray!70}\itshape
+}
+
+% =====================================================
+% ENCABEZADO
+% =====================================================
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\color{primary}\textbf{Semana 1: Linux + Bash + Git}}
+\rhead{Cimientos Técnicos}
+\rfoot{Página \thepage}
+
+% =====================================================
+% PORTADA
+% =====================================================
+\title{\Huge\textbf{Semana 1: El Entorno del Ingeniero}\\
+\vspace{0.5cm}
+\Large Linux, Shell Scripting y Control de Versiones}
+\author{Curso IA Agroindustria 2026}
+\date{Enero 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+% =====================================================
+% ABSTRACT
+% =====================================================
+\begin{abstract}
+El 80\% del éxito de un proyecto de Inteligencia Artificial depende de la ingeniería de datos, automatización y reproducibilidad.
+Esta semana aprenderás las herramientas fundamentales: terminal Linux, procesamiento de datos con pipes y control de versiones con Git.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% =====================================================
+% OBJETIVOS
+% =====================================================
+\section*{Objetivos de Aprendizaje}
+
+Al finalizar esta semana podrás:
+
+\begin{itemize}
+\item Navegar y manipular archivos desde la terminal Linux sin GUI.
+\item Construir pipelines de procesamiento de datos con pipes y \texttt{awk}.
+\item Usar Git como bitácora científica de tus experimentos.
+\item Automatizar tareas repetitivas con scripts Bash reproducibles.
+\end{itemize}
+
+\begin{infobox}{Tiempo estimado}
+\textbf{En clase (4h):} Fases 1--3 (terminal + Git básico).\\
+\textbf{Autoestudio:} Fases 4--5 (estructura de proyectos + Python desde terminal).
+\end{infobox}
+
+\newpage
+
+% =====================================================
+% PREFACIO
+% =====================================================
+\section*{Prefacio: Tu Laboratorio Digital}
+
+Imagina una finca equipada con sensores que generan miles de registros diarios en archivos CSV comprimidos.
+Abrir archivos manualmente no es una opción sostenible cuando los datos crecen.
+La ciencia de datos comienza cuando automatizas, validas y documentas cada paso del flujo de trabajo.
+
+\begin{infobox}{Principio Fundamental}
+Un modelo que no puede reproducirse no es ciencia: es magia.
+\end{infobox}
+
+\newpage
+
+% =====================================================
+% FASE 1
+% =====================================================
+\section{Fase 1: Supervivencia en la Terminal}
+
+La terminal es un lenguaje de programación declarativo para hablar con el sistema operativo.
+Todo flujo de datos sigue la lógica:
+\[
+\text{entrada} \rightarrow \text{proceso} \rightarrow \text{salida}
+\]
+
+En esta fase aprenderás a orientarte en el sistema de archivos y manipular archivos como un científico de datos.
+
+\subsection{Navegación Básica}
+
+\begin{infobox}{Objetivo}
+Aprender a saber dónde estás, qué archivos hay y cómo moverte entre carpetas de un proyecto de datos.
+\end{infobox}
+
+Comandos clave:
+
+\begin{itemize}
+\item \texttt{pwd}: muestra la ruta completa de la carpeta actual.
+\item \texttt{ls -lh}: lista archivos con tamaños legibles.
+\item \texttt{ls *.csv}: lista solo archivos CSV en la carpeta actual.
+\item \texttt{cd carpeta}: cambia a una subcarpeta.
+\item \texttt{cd ..}: sube un nivel en la jerarquía.
+\item \texttt{cd \textasciitilde}: va a la carpeta personal del usuario.
+\end{itemize}
+
+\begin{lstlisting}[style=bashstyle]
+# Ver en qué carpeta estás
+pwd
+/workspaces/curso-ia-agroindustria-2 
+
+# Listar el contenido de la carpeta actual
+ls -lh
+total 28K
+-rw-rw-rw-  1 vscode root 1.1K Jan 19 03:22 LICENSE
+-rw-rw-rw-  1 vscode root 4.7K Jan 19 03:22 README.md
+drwxrwxrwx+ 5 vscode root 4.0K Jan 19 03:22 docs
+drwxrwxrwx+ 2 vscode root 4.0K Jan 19 03:22 reports
+drwxrwxrwx+ 2 vscode root 4.0K Jan 19 03:22 scripts
+drwxrwxrwx+ 4 vscode root 4.0K Jan 19 03:22 talleres
+
+# Para crear los archivos con datos ejecuta el siguiente script:
+./scripts/setup_proyecto.sh
+
+# Se creó la carpeta data, así que vamos a listar solo archivos CSV
+ls data/raw/
+
+datos_sensores.csv
+
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio guiado (15 min)}
+\begin{enumerate}
+\item Crea una carpeta \texttt{proyecto\_ia} dentro de tu \texttt{\textasciitilde}.
+\item Dentro de \texttt{proyecto\_ia}, crea las carpetas \texttt{data}, \texttt{scripts} y \texttt{reports}.
+\item Usa \texttt{pwd} y \texttt{ls -lh} en cada paso para verificar que estás en la carpeta correcta.
+\end{enumerate}
+\end{agrobox}
+
+\subsection{Gestión de Archivos}
+
+\begin{infobox}{Objetivo}
+Crear, copiar, mover y eliminar archivos y carpetas para organizar un proyecto de datos.
+\end{infobox}
+
+Comandos frecuentes:
+
+\begin{itemize}
+\item \texttt{mkdir -p ruta}: crea una carpeta (y las intermedias si no existen).
+\item \texttt{touch archivo}: crea un archivo vacío o actualiza su fecha.
+\item \texttt{cp origen destino}: copia archivos.
+\item \texttt{mv origen destino}: mueve o renombra archivos.
+\item \texttt{rm archivo}: elimina archivos.
+\end{itemize}
+
+\begin{lstlisting}[style=bashstyle]
+# Crear estructura de carpetas del proyecto
+mkdir -p proyecto_ia/data/raw
+mkdir -p proyecto_ia/data/processed
+mkdir -p proyecto_ia/scripts
+mkdir -p proyecto_ia/reports
+
+# Crear un archivo de notas vacío
+cd proyecto_ia
+touch notas_proyecto.md
+
+# Copiar un CSV de sensores al directorio raw
+cp ../data/raw/datos_sensores.csv data/raw/
+
+# Verificar que se copió
+ls data/raw/
+
+datos_sensores.csv
+
+# Renombrar el archivo de notas
+mv notas_proyecto.md README.md
+
+# Verificar el cambio
+ls
+README.md  data/  reports/  scripts/
+
+# Eliminar un archivo (con confirmación si usas alias de seguridad)
+rm data/raw/archivo_innecesario.csv
+\end{lstlisting}
+
+\begin{warningbox}{Advertencia}
+\texttt{rm} elimina permanentemente. Usa siempre \texttt{rm -i} para que pregunte antes de borrar cada archivo.
+Más adelante definiremos alias de seguridad.
+\end{warningbox}
+
+\begin{agrobox}{Ejercicio (20 min)}
+Diseña la estructura de carpetas para un proyecto de monitoreo de humedad de suelo y crea:
+\begin{itemize}
+\item Una carpeta \texttt{figures} para gráficos.
+\item Una carpeta \texttt{logs} para registros de ejecución.
+\item Un archivo \texttt{TODO.md} en la raíz del proyecto.
+\end{itemize}
+\end{agrobox}
+
+\subsection{Comandos Clave de Científico de Datos}
+
+\begin{infobox}{Objetivo}
+Medir uso de disco, buscar archivos de datos y operar sobre columnas de archivos CSV desde la terminal.
+\end{infobox}
+
+Comandos útiles:
+
+\begin{itemize}
+\item \texttt{du -sh *}: muestra el tamaño de cada archivo/carpeta.
+\item \texttt{df -h}: muestra el espacio disponible en discos.
+\item \texttt{find . -name "*.csv"}: busca archivos con extensión \texttt{.csv}.
+\item \texttt{cut -d',' -f1}: extrae columnas de un CSV.
+\item \texttt{sort | uniq}: ordena y elimina duplicados.
+\end{itemize}
+
+\begin{lstlisting}[style=bashstyle]
+# Ver qué carpeta ocupa más espacio dentro de data
+cd proyecto_ia/data
+du -sh *
+
+# Ver espacio disponible en el disco
+df -h
+
+# Buscar todos los archivos CSV en el proyecto
+cd ..
+find . -name "*.csv"
+
+# Extraer la primera columna (por ejemplo, id_sensor) de un CSV
+cd data/raw
+cut -d',' -f1 datos_sensores.csv | head
+
+sepal_length
+5.1
+4.9
+4.7
+4.6
+5.0
+5.4
+4.6
+5.0
+4.4
+
+# Obtener lista ordenada  y única de 10 sensores
+cut -d',' -f1 datos_sensores.csv | sort | uniq | head
+
+4.3
+4.4
+4.5
+4.6
+4.7
+4.8
+4.9
+5.0
+5.1
+5.2
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio aplicado (25 min)}
+Trabajaremos con el dataset \texttt{datos\_sensores.csv} (originalmente Iris), que contiene medidas morfológicas.
+Las columnas son: \texttt{sepal\_length, sepal\_width, petal\_length, petal\_width, species}.
+
+\begin{enumerate}
+    \item \textbf{Exploración Categórica:}
+    Obtén la lista única de especies (\texttt{species}, columna 5) y cuenta cuántos registros existen por cada una.
+    \begin{lstlisting}[style=bashstyle]
+# Pista: usa cut, sort y uniq -c
+tail -n +2 datos_sensores.csv | cut -d',' -f5 | ...
+    \end{lstlisting}
+
+    \item \textbf{Conteo Total:}
+    Verifica si el dataset está completo contando el número total de filas de datos (excluyendo el encabezado).
+
+    \item \textbf{Filtrado Numérico (Nuevo):}
+    Encuentra cuántas flores tienen un \texttt{petal\_length} (columna 3) mayor a 1.5 cm.
+    \begin{lstlisting}[style=bashstyle]
+# Pista: usa awk con una condición condicional
+awk -F',' '$3 > 1.5 {print $0}' datos_sensores.csv | wc -l
+    \end{lstlisting}
+
+    \item \textbf{Detección de Outliers (Reto):}
+    Identifica las 3 flores con el \texttt{sepal\_width} (columna 2) más grande de todo el archivo.
+    \begin{lstlisting}[style=bashstyle]
+# Pista: ordena numéricamente de forma descendente (sort -nr)
+tail -n +2 datos_sensores.csv | sort -t',' -k2 -nr | head -n 3
+    \end{lstlisting}
+\end{enumerate}
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+% FASE 2
+% =====================================================
+\section{Fase 2: Procesamiento y Automatización}
+
+En esta fase aprenderás a inspeccionar datos reales, detectar errores frecuentes y construir pequeños pipelines de procesamiento usando la terminal.
+
+\subsection{Inspección de Datos}
+
+\begin{infobox}{Objetivo}
+Inspeccionar rápidamente el contenido de archivos grandes sin abrirlos en un editor gráfico.
+\end{infobox}
+
+Comandos:
+
+\begin{itemize}
+\item \texttt{head -n 5 datos.csv}: muestra las primeras 5 líneas.
+\item \texttt{tail -n 5 datos.csv}: muestra las últimas 5 líneas.
+\item \texttt{wc -l datos.csv}: cuenta las líneas del archivo.
+\item \texttt{less datos.csv}: permite navegar por el archivo.
+\end{itemize}
+
+\begin{lstlisting}[style=bashstyle]
+# ================================
+# Inspección rápida del dataset
+# Archivo real: data/raw/datos_sensores.csv (tiene encabezado)
+# Columnas: sepal_length,sepal_width,petal_length,petal_width,species
+# ================================
+
+# 0) (Recomendado) Ir a la raíz del repositorio para que las rutas funcionen
+cd ../../../../curso-ia-agroindustria-2/
+
+# 1) Ver el encabezado (nombres de columnas)
+head -n 1 data/raw/datos_sensores.csv
+
+sepal_length,sepal_width,petal_length,petal_width,species
+
+# 2) Ver las primeras 5 líneas del archivo (incluye encabezado)
+head -n 5 data/raw/datos_sensores.csv
+
+sepal_length,sepal_width,petal_length,petal_width,species
+5.1,3.5,1.4,0.2,setosa
+4.9,3.0,1.4,0.2,setosa
+4.7,3.2,1.3,0.2,setosa
+4.6,3.1,1.5,0.2,setosa
+
+# 3) Ver las últimas 5 líneas (útil para validar que el archivo no está cortado)
+tail -n 5 data/raw/datos_sensores.csv
+
+6.7,3.0,5.2,2.3,virginica
+6.3,2.5,5.0,1.9,virginica
+6.5,3.0,5.2,2.0,virginica
+6.2,3.4,5.4,2.3,virginica
+5.9,3.0,5.1,1.8,virginica
+
+# 4) Contar líneas totales (incluye el encabezado)
+wc -l data/raw/datos_sensores.csv
+
+151 data/raw/datos_sensores.csv
+
+# 5) Contar registros "reales" (sin encabezado)
+tail -n +2 data/raw/datos_sensores.csv | wc -l
+
+150 
+
+# 6) Navegar por el archivo sin abrirlo en un editor (q para salir)
+less data/raw/datos_sensores.csv
+\end{lstlisting}
+
+\subsection{Datos Reales y Errores Comunes}
+
+Los datos reales contienen errores:
+
+\begin{itemize}
+\item Valores faltantes representados como cadenas vacías o símbolos especiales.
+\item Separadores inconsistentes (comas, punto y coma, tabuladores).
+\item Registros corruptos con caracteres no ASCII.
+\end{itemize}
+
+\begin{lstlisting}[style=bashstyle]
+# Buscar columnas vacías consecutivas ,, que pueden indicar datos faltantes
+grep ",," data/raw/datos_sensores.csv | head
+
+# Detectar caracteres no ASCII (posibles errores de codificación)
+grep -P "[^\x00-\x7F]" data/raw/datos_sensores.csv | head
+\end{lstlisting}
+
+\begin{warningbox}{Atención}
+Antes de entrenar cualquier modelo, debes conocer la calidad de tus datos.
+No confíes en que el archivo está limpio solo porque se abre en una hoja de cálculo.
+\end{warningbox}
+
+\subsection{Pipelines con Pipes}
+
+El operador \texttt{|} (pipe) conecta la salida de un comando con la entrada de otro.
+Permite encadenar operaciones simples para construir un procesamiento más complejo.
+
+\begin{lstlisting}[style=bashstyle]
+# Contar cuántas veces aparece un dato id_sensor en el archivo, conteo rápido de los 10 sensores más frecuentes
+cut -d',' -f1 data/raw/datos_sensores.csv | sort | uniq -c | sort -nr | head
+
+10 5.0
+ 9 6.3
+ 9 5.1
+ 8 6.7
+ 8 5.7
+ 7 6.4
+ 7 5.8
+ 7 5.5
+ 6 6.1
+ 6 6.0
+
+# Obtener los 10 valores de temperatura más altos registrados
+cut -d',' -f3 data/raw/datos_sensores.csv | sort -nr | head
+
+# Filtrar solo las líneas de un sensor específico y contarlas
+grep "setosa" data/raw/datos_sensores.csv | wc -l
+
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio de pipeline (30 min)}
+Construye un pipeline usando \texttt{cut}, \texttt{sort} y \texttt{head} para analizar las flores más grandes. El objetivo es:
+
+\begin{enumerate}
+    \item Extraer solo las columnas de \textbf{especie} (columna 5) y \textbf{longitud del pétalo} (columna 3).
+    \item Ordenar los resultados por longitud de pétalo de forma \textbf{descendente} (de mayor a menor).
+    \item Mostrar en pantalla las \textbf{5 flores con los pétalos más largos} del dataset.
+\end{enumerate}
+
+\textbf{Comando esperado:}
+\begin{lstlisting}[style=bashstyle]
+# Pista: Recuerda que sort necesita saber qué columna usar (-k) o recibir solo los datos a ordenar
+cut -d',' -f5,3 data/raw/datos_sensores.csv | sort -t',' -k2 -nr | head -n 5
+\end{lstlisting}
+\end{agrobox}
+
+\subsection{Procesamiento con awk}
+
+\texttt{awk} es un mini-lenguaje potente para procesar columnas y calcular estadísticas sin abrir Excel. Vamos a usarlo para analizar las dimensiones de las flores.
+
+\begin{lstlisting}[style=bashstyle]
+# Calcular la longitud promedio del sépalo (columna 1)
+# NR = Número de Registro (filas totales procesadas)
+awk -F',' 'NR>1 {s+=$1} END {print "Longitud promedio sépalo:", s/(NR-1)}' data/raw/datos_sensores.csv
+
+# Encontrar el ancho de pétalo máximo (columna 4)
+awk -F',' 'NR>1 {if($4>max) max=$4} END {print "Ancho máximo pétalo:", max}' data/raw/datos_sensores.csv
+
+# Filtrar flores pequeñas: mostrar solo aquellas con largo de pétalo < 1.5 cm (columna 3)
+awk -F',' '$3 < 1.5 {print $0}' data/raw/datos_sensores.csv | head
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio con awk (30 min)}
+Usando el archivo \texttt{data/raw/datos\_sensores.csv}:
+\begin{enumerate}
+    \item Usa \texttt{awk} para calcular el \textbf{promedio del ancho de sépalo} (columna 2).
+    \item Cuenta cuántas flores son de la especie \textbf{"virginica"} (columna 5).
+    \item Filtra todas las flores con \texttt{petal\_length > 5.0} y guarda esas filas en un nuevo archivo llamado \texttt{flores\_gigantes.csv}.
+\end{enumerate}
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+% FASE 3
+% =====================================================
+\section{Fase 3: Control de Versiones con Git}
+
+En esta fase transformarás tu carpeta de archivos sueltos en un proyecto versionado con Git, usando buenas prácticas de colaboración.
+
+\subsection{Git como Bitácora Científica}
+
+Git es un sistema de control de versiones distribuido que registra la historia de tu proyecto, permitiéndote volver a estados anteriores y colaborar con otros.
+
+Flujo básico:
+
+\begin{enumerate}
+\item \texttt{git init}: inicializa el repositorio.
+\item \texttt{git status}: muestra el estado actual.
+\item \texttt{git add}: selecciona cambios para guardar.
+\item \texttt{git commit}: guarda un "fotograma" con mensaje.
+\end{enumerate}
+
+\begin{lstlisting}[style=bashstyle]
+cd ~/proyecto_ia
+
+# Inicializar repositorio Git
+git init
+
+# Ver estado (archivos sin seguimiento)
+git status
+
+# Añadir todos los archivos para el primer commit
+git add .
+
+# Crear el commit inicial con un mensaje descriptivo
+git commit -m "feat: estructura inicial del proyecto de sensores"
+
+# Ver el historial de commits
+git log --oneline
+\end{lstlisting}
+
+\begin{infobox}{Buenas prácticas de commits}
+\begin{itemize}
+\item Haz commits pequeños y frecuentes.
+\item Usa mensajes que expliquen el \emph{por qué} del cambio.
+\item Agrupa cambios relacionados en un mismo commit.
+\item Usa prefijos: \texttt{feat:}, \texttt{fix:}, \texttt{docs:}, \texttt{refactor:}.
+\end{itemize}
+\end{infobox}
+
+\subsection{Uso de .gitignore}
+
+El archivo \texttt{.gitignore} indica a Git qué archivos o carpetas no deben versionarse (datos brutos, modelos grandes, archivos temporales).
+
+\begin{lstlisting}[style=bashstyle]
+# Crear el archivo .gitignore
+cat > .gitignore << EOF
+# Entornos virtuales
+venv/
+ia_env/
+
+# Datos brutos (no versionables)
+data/raw/
+data/interim/
+
+# Artefactos Python
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
+
+# Modelos pesados
+*.pth
+*.h5
+
+# Logs y temporales
+*.log
+*.tmp
+EOF
+
+git add .gitignore
+git commit -m "docs: configura .gitignore para datos y artefactos"
+\end{lstlisting}
+
+\begin{warningbox}{Regla práctica}
+Nunca subas datos sensibles ni archivos de gran tamaño al repositorio.
+Para datos grandes, considera herramientas como Git LFS u otros almacenes externos.
+\end{warningbox}
+
+\subsection{Flujo de Trabajo Básico}
+
+Vamos a simular un ciclo de desarrollo real: crear una nueva herramienta, verificarla y guardarla en el historial.
+
+\begin{lstlisting}[style=bashstyle]
+# 1. Crear un nuevo script de validación
+echo "#!/bin/bash" > scripts/validar_datos.sh
+echo "echo 'Contando filas en el dataset maestro...'" >> scripts/validar_datos.sh
+echo "wc -l data/raw/datos_sensores.csv" >> scripts/validar_datos.sh
+
+# 2. Hacerlo ejecutable
+chmod +x scripts/validar_datos.sh
+
+# 3. Verificar qué ha cambiado en el proyecto
+git status
+# (Debería mostrar scripts/validar_datos.sh como 'Untracked')
+
+# 4. Guardar el cambio en el historial (Staging + Commit)
+git add scripts/validar_datos.sh
+git commit -m "feat: agrega script para contar registros totales"
+
+# 5. Visualizar la historia de cambios
+git log --oneline --graph --all
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio de Git (30 min)}
+Sigue estos pasos en tu terminal (asegúrate de estar en la raíz del proyecto):
+\begin{enumerate}
+    \item Crea un archivo nuevo \texttt{scripts/resumen.sh} que imprima las primeras 5 líneas de tus datos usando \texttt{head}.
+    \item Ejecuta \texttt{git status} para confirmar que Git detecta el archivo nuevo.
+    \item Añádelo al área de preparación con \texttt{git add scripts/resumen.sh}.
+    \item Haz un commit con el mensaje: \texttt{"feat: script para previsualizar datos"}.
+    \item Modifica el archivo \texttt{README.md} agregando una línea al final y haz un nuevo commit.
+    \item Usa \texttt{git log} para comprobar que tus 2 nuevos commits aparecen en la lista.
+\end{enumerate}
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+% CASOS POR CARRERA
+% =====================================================
+\section{Casos de Uso por Carrera}
+
+Los comandos aprendidos se aplican distinto según el dominio:
+
+\subsection{Agroindustria Alimenticia}
+
+\begin{agrobox}{Caso: Control de calidad de lotes}
+Archivos CSV con registros de inspección visual (color, tamaño, defectos) de fruta para exportación.
+Cada fila = 1 unidad inspeccionada, con columnas: \texttt{lote\_id,fecha,peso\_g,calibre,color,defectos}.
+
+\textbf{Pipeline típico:}
+\begin{lstlisting}[style=bashstyle]
+# Cuántos lotes inspeccionados hoy
+grep "$(date +%Y-%m-%d)" inspeccion.csv | cut -d',' -f1 | sort | uniq | wc -l
+
+# Lotes con >5% de defectos (columna 6 > 5)
+awk -F',' '$6 > 5 {print $1}' inspeccion.csv | sort | uniq > lotes_rechazados.txt
+\end{lstlisting}
+\end{agrobox}
+
+\subsection{Agronomía}
+
+\begin{agrobox}{Caso: Monitoreo de rendimiento por lote}
+CSV con datos de cosecha: \texttt{lote\_id,ha,kg\_cosechados,fecha}.
+
+\textbf{Pipeline típico:}
+\begin{lstlisting}[style=bashstyle]
+# Calcular toneladas/ha promedio por lote
+awk -F',' 'NR>1 {print $1, $3/$2/1000}' cosecha.csv | \
+  awk '{s[$1]+=$2; c[$1]++} END {for(l in s) print l, s[l]/c[l]}' | \
+  sort -k2 -nr > rendimiento_promedio.txt
+\end{lstlisting}
+\end{agrobox}
+
+\subsection{Ingeniería Agrícola}
+
+\begin{agrobox}{Caso: Telemetría de riego}
+Datos de sensores de humedad cada 15 min: \texttt{sensor\_id,timestamp,humedad\_suelo,presion\_agua}.
+
+\textbf{Pipeline típico:}
+\begin{lstlisting}[style=bashstyle]
+# Detectar sensores con humedad <20% (alerta riego)
+awk -F',' '$3 < 20 {print $1,$2,$3}' riego.csv | \
+  sort | uniq > alertas_riego.txt
+
+# Contar alertas por sensor
+cut -d' ' -f1 alertas_riego.txt | sort | uniq -c | sort -nr
+\end{lstlisting}
+\end{agrobox}
+
+\subsection{Ingeniería Ambiental}
+
+\begin{agrobox}{Caso: Monitoreo de calidad de agua}
+CSV con muestreos: \texttt{estacion\_id,fecha,pH,turbidez\_NTU,coliformes\_UFC}.
+
+\textbf{Pipeline típico:}
+\begin{lstlisting}[style=bashstyle]
+# Estaciones fuera de norma (pH <6.5 o >8.5)
+awk -F',' '$3<6.5 || $3>8.5 {print $1,$2,$3}' calidad_agua.csv > pH_fuera_norma.txt
+
+# Promedios de turbidez por estación
+awk -F',' 'NR>1 {s[$1]+=$4; c[$1]++} END {for(e in s) print e, s[e]/c[e]}' \
+  calidad_agua.csv | sort -k2 -nr
+\end{lstlisting}
+\end{agrobox}
+
+\begin{infobox}{Ejercicio multi-carrera (30 min)}
+Adapta uno de estos pipelines a tu dataset real (o simula uno pequeño con 20 filas en Excel y exporta a CSV).
+Documenta en tu README qué hizo cada comando y qué insights descubriste.
+\end{infobox}
+
+\newpage
+
+% =====================================================
+% ENTREGABLE A1
+% =====================================================
+% =====================================================
+% ENTREGABLE A1
+% =====================================================
+\section{Entregable A1: Script de Setup Reproducible}
+
+\begin{infobox}{Objetivo}
+Construir un script Bash (\texttt{scripts/setup\_proyecto.sh}) que automatice la creación de estructura, descarga de datos reales y validación básica.
+\end{infobox}
+
+\subsection{Conceptos Nuevos Necesarios}
+
+Para este script usaremos herramientas de automatización que no hemos visto en detalle:
+
+\begin{itemize}
+    \item \textbf{\texttt{curl -o destino url}}: Descarga un archivo desde internet. Es como ``Guardar como...'' pero desde la terminal.
+    \item \textbf{\texttt{if [ ! -f archivo ]; then ... fi}}: Bloque condicional que verifica si un archivo \textbf{NO} existe antes de intentar crearlo o descargarlo (evita sobreescribir trabajo previo).
+    \item \textbf{\texttt{set -euo pipefail}}: Un ``modo estricto'' para Bash. Hace que el script se detenga inmediatamente si ocurre cualquier error, en lugar de seguir ejecutando comandos a ciegas.
+\end{itemize}
+
+\subsection{Requisitos Mínimos}
+
+\begin{enumerate}
+    \item \textbf{Automatización de Carpetas:} El script debe crear \texttt{data/raw}, \texttt{data/processed}, \texttt{scripts} y \texttt{reports} usando \texttt{mkdir -p} (para no fallar si ya existen).
+    \item \textbf{Descarga Automática:} Debe descargar el dataset Iris desde una URL pública (ver plantilla) y guardarlo como \texttt{data/raw/datos\_sensores.csv}.
+    \item \textbf{Validación de Calidad:} Generar un archivo \texttt{reports/validacion\_inicial.txt} con:
+    \begin{itemize}
+        \item Fecha de ejecución (\texttt{date}).
+        \item Conteo de filas y columnas.
+        \item Detección de posibles valores vacíos (\texttt{grep ",,"}).
+    \end{itemize}
+    \item \textbf{Control de Versiones:} El repositorio final debe tener un \texttt{.gitignore} adecuado y al menos 3 commits descriptivos.
+\end{enumerate}
+
+\subsection{Plantilla del Script (Base)}
+
+Copia este código en \texttt{scripts/setup\_proyecto.sh} y estúdialo. Ya incluye la URL correcta para el ejercicio.
+
+\begin{lstlisting}[style=bashstyle]
+#!/usr/bin/env bash
+# Modo estricto: el script falla si algún comando falla
+set -euo pipefail
+
+echo ">>> Iniciando setup del proyecto..."
+
+# 1. Crear estructura de carpetas (silencioso si ya existen)
+mkdir -p data/raw data/processed scripts reports
+
+# 2. Definir variables de descarga
+# Usamos el dataset Iris como "datos de sensores"
+DATA_URL="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+DATA_FILE="data/raw/datos_sensores.csv"
+
+# 3. Descargar solo si no existe (Idempotencia)
+if [ ! -f "$DATA_FILE" ]; then
+    echo ">>> Descargando datos desde GitHub..."
+    # -L sigue redirecciones, -o guarda en archivo
+    curl -L -o "$DATA_FILE" "$DATA_URL"
+else
+    echo ">>> Los datos ya existen, saltando descarga."
+fi
+
+# 4. Generar reporte de validación
+echo ">>> Generando reporte..."
+REPORT_FILE="reports/validacion_inicial.txt"
+
+{
+    echo "=== REPORTE DE VALIDACIÓN ==="
+    echo "Fecha: $(date)"
+    echo "Archivo: $DATA_FILE"
+    echo "Tamaño: $(du -h $DATA_FILE | cut -f1)"
+    echo "Filas totales: $(wc -l < $DATA_FILE)"
+    # Truco: contar comas en la primera línea + 1 para saber columnas
+    echo "Columnas detectadas: $(head -n1 $DATA_FILE | tr ',' '\n' | wc -l)"
+} > "$REPORT_FILE"
+
+echo ">>> Setup completado exitosamente. Revisa $REPORT_FILE"
+\end{lstlisting}
+
+\begin{warningbox}{Tips de Ejecución}
+Recuerda dar permisos de ejecución antes de probarlo:
+\texttt{chmod +x scripts/setup\_proyecto.sh}\\
+Luego ejecútalo desde la raíz del proyecto:
+\texttt{./scripts/setup\_proyecto.sh}
+\end{warningbox}
+
+% =====================================================
+% DESAFÍO DE ANÁLISIS (MANUAL)
+% =====================================================
+\section{Desafío: Minería de Datos con Bash}
+
+Una vez ejecutado tu script de setup (\texttt{setup\_proyecto.sh}), tendrás los datos listos en \texttt{data/raw/datos\_sensores.csv}.
+Ahora deberás demostrar tu habilidad extrayendo información clave usando solo la terminal.
+
+\subsection{Instrucciones}
+Resuelve los siguientes retos y documenta los comandos que usaste en tu archivo \texttt{README.md}, bajo una nueva sección titulada \textbf{"Resultados del Análisis"}.
+
+\begin{agrobox}{Reto 1: Exploración de Especies}
+¿Cuántas muestras de cada especie contiene el archivo?
+\begin{itemize}
+    \item Objetivo: Obtener una tabla de frecuencias.
+    \item Pista: Usa el pipeline \texttt{cut} $\rightarrow$ \texttt{sort} $\rightarrow$ \texttt{uniq -c}.
+    \item La columna de especies es la número 5.
+\end{itemize}
+\end{agrobox}
+
+\begin{agrobox}{Reto 2: Detección de Anomalías (Outliers)}
+Encontremos las flores inusualmente grandes.
+\begin{itemize}
+    \item Objetivo: Mostrar las 5 filas con el \textbf{sépalo más largo} (columna 1).
+    \item Pista: Recuerda usar \texttt{sort -t',' -k1 -nr}.
+\end{itemize}
+\end{agrobox}
+
+\begin{agrobox}{Reto 3: Filtrado Avanzado (awk)}
+Filtra y cuenta cuántas flores cumplen la condición de ser \textbf{"gigantes"}.
+\begin{itemize}
+    \item Condición: \texttt{petal\_length} (columna 3) mayor a \textbf{6.0} cm.
+    \item Comando sugerido:
+    \texttt{awk -F',' '\$3 > 6.0 \{print \$0\}' data/raw/datos\_sensores.csv | wc -l}
+    \item Pregunta para el reporte: ¿Cuántas flores cumplen esta condición?
+\end{itemize}
+\end{agrobox}
+
+\begin{infobox}{Ejemplo de documentación en README.md}
+Tu \texttt{README.md} debería verse así al final:
+
+\texttt{\# Resultados del Análisis}\\
+\texttt{1. Conteo de especies:}\\
+\texttt{   - 50 setosa}\\
+\texttt{   - 50 versicolor...}\\
+\texttt{   (Comando usado: cut -d',' -f5 ...)}\\
+\dots
+\end{infobox}
+
+\subsection{Entrega}
+
+\begin{itemize}
+    \item Sube tu repositorio a GitHub.
+    \item Asegúrate de que el \texttt{README.md} explique cómo ejecutar tu script de setup.
+    \item Comparte la URL del repositorio.
+\end{itemize}
+
+\newpage
+
+% =====================================================
+% MATERIAL DE AUTOESTUDIO Y REFERENCIA
+% =====================================================
+\section*{Material de Autoestudio y Profundización}
+
+Esta sección resume las herramientas clave vistas y prepara el terreno para el análisis avanzado con Python.
+
+\subsection*{Resumen de Comandos (Cheat Sheet)}
+
+Guarda esta referencia rápida. Combinar estos comandos te permite hacer una primera exploración de datos en segundos.
+
+\begin{itemize}
+    \item \textbf{Exploración rápida:}
+    \begin{itemize}
+        \item \texttt{head -n 5 file.csv}: Ver encabezados y primeras filas.
+        \item \texttt{wc -l file.csv}: Contar tamaño (filas).
+        \item \texttt{grep "ERROR" file.log}: Buscar textos específicos.
+    \end{itemize}
+    
+    \item \textbf{Filtrado y Selección (Columns):}
+    \begin{itemize}
+        \item \texttt{cut -d',' -f1,3}: Extraer columnas 1 y 3.
+        \item \texttt{awk -F',' '\$3 > 50 \{print \$0\}'}: Filtrar filas por condición numérica (columna 3 > 50).
+    \end{itemize}
+    
+    \item \textbf{Agregación y Estadística (Bash puro):}
+    \begin{itemize}
+        \item \texttt{sort | uniq -c}: Tabla de frecuencias (histograma de texto).
+        \item \texttt{sort -nr | head}: Top 10 valores más altos.
+    \end{itemize}
+    
+    \item \textbf{Git (Ciclo de vida):}
+    \begin{itemize}
+        \item \texttt{git status} $\rightarrow$ \texttt{git add .} $\rightarrow$ \texttt{git commit -m "msg"}.
+        \item \texttt{git log --oneline --graph}: Ver la historia del árbol.
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Profundización: Estructuras de Proyecto (Cookiecutter)}
+
+La estructura que creaste (\texttt{data, scripts, reports}) no es arbitraria. Sigue el estándar \textit{Cookiecutter Data Science}, usado en la industria para garantizar que los proyectos sean reproducibles.
+
+\begin{itemize}
+    \item \textbf{data/raw}: Inmutable. Jamás edites un archivo aquí manualmente.
+    \item \textbf{data/processed}: El resultado de limpiar \texttt{raw}. Si borras esta carpeta, deberías poder regenerarla corriendo tus scripts.
+    \item \textbf{reports}: El conocimiento generado (gráficos, PDFs, tablas).
+\end{itemize}
+
+\subsection*{El Puente a Python: Cuando Bash no es suficiente}
+
+Bash es excelente para \textit{pipes} y limpieza rápida, pero para estadística compleja (promedios, desviaciones, gráficos), Python es mejor.
+
+Mira lo fácil que es obtener un resumen estadístico completo con la librería \textbf{Pandas} (que veremos en profundidad la próxima semana):
+
+\begin{lstlisting}[style=bashstyle]
+# "One-liner" de Python invocado desde Bash
+# Calcula promedio, min, max y cuartiles de TODAS las columnas numéricas
+python3 -c "import pandas as pd; df = pd.read_csv('data/raw/datos_sensores.csv'); print(df.describe())"
+\end{lstlisting}
+
+\begin{infobox}{Preparación para Semana 2}
+Para la próxima clase, asegúrate de tener tu entorno Python listo.
+\begin{enumerate}
+    \item Crea un entorno: \texttt{python -m venv ia\_env}
+    \item Actívalo: \texttt{source ia\_env/bin/activate} (Linux/Mac) o \texttt{ia\_env\\Scripts\\activate} (Windows).
+    \item Instala Pandas: \texttt{pip install pandas numpy}
+\end{enumerate}
+\end{infobox}
+
+\appendix
+
+\section*{Anexo: Alias de Productividad}
+
+Copia estos alias en tu archivo de configuración (\texttt{\textasciitilde/.bashrc}) para trabajar más rápido y seguro:
+
+\begin{lstlisting}[style=bashstyle]
+# Seguridad (pregunta antes de borrar/sobrescribir)
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Listados útiles
+alias ll='ls -lh'      # Lista detallada con tamaño humano
+alias la='ls -lha'     # Incluye archivos ocultos
+
+# Git rápido
+alias gs='git status'
+alias gl='git log --oneline --graph --all'
+\end{lstlisting}
+
+\begin{infobox}{Siguiente Nivel}
+En la \textbf{Semana 2}, dejaremos atrás el procesamiento de texto línea por línea y pasaremos a la \textbf{vectorización con NumPy}: cómo procesar matrices de millones de datos en milisegundos usando el poder matemático de Python.
+\end{infobox}
+
+\end{document}

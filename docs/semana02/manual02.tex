@@ -1,0 +1,1666 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- MOTOR DE FUENTES (XeLaTeX) ---
+\usepackage{fontspec}
+\setmainfont{DejaVu Sans}[
+  BoldFont={DejaVu Sans Bold},
+  ItalicFont={DejaVu Sans Oblique},
+  Scale=0.95
+]
+\setmonofont{DejaVu Sans Mono}[Scale=0.85]
+
+% --- IDIOMA ---
+\usepackage{polyglossia}
+\setmainlanguage{spanish}
+
+% --- PAQUETES ---
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% --- GEOMETRÍA ---
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=3.2cm}
+\setlength{\headheight}{28pt}
+
+% --- COLORES ---
+\definecolor{primary}{RGB}{0, 85, 164}
+\definecolor{accent}{RGB}{34, 139, 34}
+\definecolor{danger}{RGB}{204, 0, 0}
+\definecolor{codebg}{RGB}{245, 247, 250}
+\definecolor{muted}{RGB}{90, 90, 90}
+
+% --- CAJAS ---
+\newtcolorbox{conceptbox}[1]{
+  colback=blue!5!white,
+  colframe=primary,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.5mm,
+  arc=2mm,
+  enhanced
+}
+\newtcolorbox{agrobox}[1]{
+  colback=green!5!white,
+  colframe=accent,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.5mm,
+  arc=2mm,
+  enhanced
+}
+\newtcolorbox{warningbox}[1]{
+  colback=red!5!white,
+  colframe=danger,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0.5mm,
+  arc=2mm,
+  enhanced
+}
+
+% --- LISTINGS (Python) ---
+\lstdefinestyle{pythonstyle}{
+  backgroundcolor=\color{codebg},
+  commentstyle=\color{muted}\itshape,
+  keywordstyle=\color{primary}\bfseries,
+  numberstyle=\tiny\color{muted},
+  stringstyle=\color{accent},
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  frame=l,
+  rulecolor=\color{primary},
+  numbers=left,
+  showstringspaces=false,
+  literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+  {⚠}{{\textcolor{orange}{\bfseries !}}}1
+  {💧}{{\textcolor{blue}{O}}}1
+  {✅}{{\textcolor{green}{OK}}}1
+  {—}{{--}}1
+  {–}{{--}}1
+}
+\lstset{style=pythonstyle}
+
+% --- ENCABEZADO ---
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\textbf{Ingeniería de IA I}}
+\rhead{Semana 02: HPC con Python + NumPy}
+\rfoot{\thepage}
+
+\title{\textbf{Python y Computación Científica para el Agro: De Datos Crudos a Decisiones Inteligentes}\\
+\large Desarrollo + ejemplos comentados + ejercicios}
+\author{Curso de IA Aplicada al Agro}
+\date{Enero 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+% =====================================================
+% Capítulo 1 (Intro): Puente desde Python básico a HPC/NumPy
+% =====================================================
+\section{ De Python básico a NumPy (el puente conceptual)}
+
+Este texto es una guía corta para que cualquier estudiante, incluso si apenas está empezando, entienda el \textbf{por qué} y el \textbf{para qué} de lo que vamos a construir en esta semana: validación de datos, limpieza de CSV, medición de rendimiento y procesamiento matricial con NumPy.
+
+\begin{conceptbox}{Metas}
+Al finalizar deberías poder leer el resto del manual sin sentir que ``aparecen cosas mágicas''. La idea es entender:
+\begin{itemize}
+\item Qué es un programa en Python y cómo se organiza.
+\item Cómo se toman decisiones (\texttt{if/elif/else}) y se repiten tareas (\texttt{for}).
+\item Por qué usamos funciones para empaquetar lógica.
+\item Cómo funcionan los errores y por qué los usamos (fail fast).
+\item Cómo leer archivos de texto/CSV de manera simple.
+\item Por qué NumPy cambia el juego en rendimiento (vectorización).
+\item Qué son máscaras booleanas y cómo \texttt{np.where} decide por celda.
+\end{itemize}
+\end{conceptbox}
+
+\subsection{Qué es un programa en Python (y qué significa ``ejecutar'')}
+Un programa en Python es un archivo \texttt{.py} con instrucciones que la máquina ejecuta en orden.
+En este curso, casi todos los scripts siguen esta estructura:
+
+\begin{lstlisting}[language=Python, caption={Estructura típica de un script}]
+def main():
+    # aquí va la lógica principal
+    print("Hola")
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\textbf{Idea clave:} \texttt{main()} concentra el flujo del programa y el bloque
+\texttt{if \_\_name\_\_ == "\_\_main\_\_":}
+ hace que el script se ejecute solo cuando lo corres directamente.
+
+\subsection{Tipos de datos: números, texto y booleanos}
+Para trabajar con sensores y mediciones necesitamos entender tres tipos básicos:
+
+\begin{itemize}
+\item \textbf{Números}: \texttt{int} y \texttt{float} (ej. temperatura, humedad).
+\item \textbf{Texto}: \texttt{str} (ej. id del sensor, fecha).
+\item \textbf{Booleanos}: \texttt{True/False} (ej. ``está en sequía?'' sí/no).
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Ejemplo mínimo de tipos}]
+temp = 24.2          # float
+hum = 55             # int
+sensor_id = "SENSOR_01"  # str
+alarma = hum < 40     # bool
+\end{lstlisting}
+\newpage
+% ======================================================
+\section{Verificar y convertir tipos de datos en Python}
+
+En programación científica es fundamental asegurarse de que cada variable tenga el \textbf{tipo de dato} correcto (entero, número real, texto, etc.), especialmente antes de hacer cálculos o comparaciones.
+
+\subsection{Tipos básicos: \texttt{int}, \texttt{float}, \texttt{str}}
+
+En Python, los tipos más usados en este curso son:
+
+\begin{itemize}
+    \item \texttt{int}: números enteros, por ejemplo \texttt{3}, \texttt{-10}, \texttt{42}.
+    \item \texttt{float}: números reales (con decimales), por ejemplo \texttt{3.14}, \texttt{-0.5}, \texttt{25.0}.
+    \item \texttt{str}: cadenas de texto, por ejemplo \texttt{"Café"}, \texttt{"Zona Norte"}, \texttt{"25.0"}.
+\end{itemize}
+
+\subsection{Cómo saber de qué tipo es una variable}
+
+Python permite inspeccionar el tipo de una variable con la función \texttt{type()}:
+
+\begin{lstlisting}[language=Python, caption={Inspección de tipos de variables}]
+temperatura = 25.0
+parcela_id = "P001"
+cantidad_sacos = 30
+
+print(type(temperatura))   # <class 'float'>
+print(type(parcela_id))    # <class 'str'>
+print(type(cantidad_sacos))# <class 'int'>
+\end{lstlisting}
+
+Esto es útil para depurar errores cuando una operación no funciona como se esperaba.
+
+\subsection{Convertir entre tipos (casting)}
+
+Muchas veces los datos llegan como texto (\texttt{str}) desde un archivo CSV o desde la entrada del usuario, y es necesario convertirlos a número antes de operar.
+
+\begin{lstlisting}[language=Python, caption={Conversión de tipos}]
+valor_bruto = "28.5"   # Esto es texto, no un número
+
+temperatura = float(valor_bruto)  # str -> float
+sacos_str = "30"
+sacos = int(sacos_str)            # str -> int
+
+print(temperatura + 1.5)          # 30.0
+print(sacos + 5)                  # 35
+\end{lstlisting}
+
+Conversión típica en este curso:
+
+\begin{itemize}
+    \item \texttt{str} a \texttt{int}: \texttt{int("42")}.
+    \item \texttt{str} a \texttt{float}: \texttt{float("3.14")}.
+    \item Cualquier tipo a \texttt{str}: \texttt{str(25.0)}.
+\end{itemize}
+
+\subsection{Ejemplo aplicado al agro}
+
+Al leer un CSV con mediciones de parcelas, todas las columnas llegan como texto. Antes de tomar decisiones agronómicas, se convierten al tipo correcto:
+
+\begin{lstlisting}[language=Python, caption={Asegurar tipos correctos desde CSV}]
+fila = {
+    "parcela_id": "P010",
+    "temperatura_c": "29.7",
+    "humedad_suelo_pct": "38",
+    "ph": "5.4"
+}
+
+parcela_id = fila["parcela_id"]                 # str
+temperatura = float(fila["temperatura_c"])      # str -> float
+humedad = int(fila["humedad_suelo_pct"])        # str -> int
+ph = float(fila["ph"])                          # str -> float
+
+print(type(parcela_id))  # <class 'str'>
+print(type(temperatura)) # <class 'float'>
+print(type(humedad))     # <class 'int'>
+print(type(ph))          # <class 'float'>
+\end{lstlisting}
+
+Si se omite esta conversión, las comparaciones como \texttt{temperatura > 30} o \texttt{humedad < 40} pueden fallar o producir resultados incorrectos.
+\newpage
+% ======================================================
+\section{Control de flujo: decisiones y reglas}
+Las reglas agronómicas se expresan como condiciones:
+
+\begin{lstlisting}[language=Python, caption={Decisión simple con if/elif/else}]
+if hum < 40:
+    print("Riego")
+elif hum > 80:
+    print("Drenaje")
+else:
+    print("Normal")
+\end{lstlisting}
+
+\textbf{Puente al manual:} más adelante no aplicaremos estas reglas a un solo valor, sino a una matriz completa con NumPy.
+
+\subsection{Repetición: recorrer muchos datos}
+Cuando hay múltiples sensores o múltiples filas en un archivo, repetimos acciones:
+
+\begin{lstlisting}[language=Python, caption={Recorrer una lista con for}]
+humedades = [55, 60, 38, 92]
+for h in humedades:
+    if h < 40:
+        print("Riego")
+\end{lstlisting}
+
+\textbf{Puente al manual:} recorrer 1,000,000 valores con un \texttt{for} es posible, pero lento; por eso aparece NumPy.
+
+\subsection{Estructuras clave: listas y diccionarios}
+En IA aplicada al agro se usan mucho:
+
+\begin{itemize}
+\item \textbf{Listas}: colecciones ordenadas (series de mediciones).
+\item \textbf{Diccionarios}: registros con campos (una fila de sensor con columnas).
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Registro tipo diccionario (una fila de sensor)}]
+row = {"id": "SENSOR_01", "temp": 24.2, "hum": 55}
+\end{lstlisting}
+
+\textbf{Puente al manual:} el validador fail-fast trabaja sobre diccionarios así.
+\newpage
+% ======================================================
+\section{Funciones: empaquetar lógica reutilizable}
+Cuando una regla se repite, se convierte en función:
+
+\begin{lstlisting}[language=Python, caption={Función simple reutilizable}]
+def necesita_riego(hum):
+    return hum < 40
+
+print(necesita_riego(35))  # True
+\end{lstlisting}
+
+\textbf{Puente al manual:} \texttt{validar\_sensor\_row(row)} es una función que formaliza una política de calidad de datos.
+
+\subsection{Errores y excepciones: fail fast en la práctica}
+En ingeniería, a veces la respuesta correcta es \textbf{parar}.
+
+\begin{lstlisting}[language=Python, caption={Excepciones con try/except}]
+def dividir(a, b):
+    if b == 0:
+        raise ValueError("No se puede dividir por cero")
+    return a / b
+
+try:
+    print(dividir(10, 0))
+except ValueError as e:
+    print("Error:", e)
+\end{lstlisting}
+
+\textbf{Puente al manual:} cuando una fila del CSV está corrupta o fuera de rango, la descartamos y registramos el motivo; eso evita contaminar resultados.
+
+\subsection{Archivos: leer texto y CSV sin librerías}
+Un CSV es texto con comas. Podemos procesarlo línea por línea:
+
+\begin{lstlisting}[language=Python, caption={Lectura mínima de un CSV (sin pandas)}]
+with open("sensores.csv", "r", encoding="utf-8") as f:
+    header = f.readline()  # primera línea: nombres de columnas
+    for linea in f:
+        partes = linea.strip().split(",")
+        # aquí validas y conviertes tipos
+\end{lstlisting}
+
+\textbf{Puente al manual:} ese patrón es la base de la limpieza del CSV sucio y la escritura del CSV limpio.
+\newpage
+% ======================================================
+\section{Por qué NumPy: cuando el tamaño importa}
+Python es excelente para lógica, pero un \texttt{for} ejecuta iteración por iteración en el intérprete.
+NumPy permite operar con arreglos completos de números de forma eficiente (operaciones implementadas en bajo nivel).
+
+\begin{conceptbox}{Idea}
+En el manual medimos esto con un benchmark:
+\begin{itemize}
+\item versión lenta: bucle \texttt{for}
+\item versión rápida: \texttt{np.sin(x) + np.cos(x)}
+\end{itemize}
+\end{conceptbox}
+
+\subsection{Máscaras booleanas: decisiones sobre mapas}
+Una máscara booleana es una matriz de \texttt{True/False} que marca posiciones de interés:
+
+\begin{lstlisting}[language=Python, caption={Máscara booleana en matriz}]
+import numpy as np
+humedad = np.random.rand(5, 5)
+sequia = humedad < 0.2  # matriz booleana del mismo tamaño
+\end{lstlisting}
+
+Esto permite seleccionar/contar/actuar sobre celdas sin iterar manualmente.
+
+\subsection{\texttt{np.where}: decidir por celda sin if por celda}
+\texttt{np.where(condicion, valor\_si\_true, valor\_si\_false)} construye una salida celda-a-celda.
+
+\begin{lstlisting}[language=Python, caption={np.where como motor de decisiones}]
+acciones = np.where(humedad < 0.2, "R", ".")  # "R" regar, "." normal
+\end{lstlisting}
+
+\textbf{Puente al manual:} esto es el núcleo del “motor de decisión hídrica” sobre mapas.
+\newpage
+% ======================================================
+% =====================================================
+% Sección extra: Profundización en NumPy
+% =====================================================
+\section{Profundización: NumPy y su potencial}
+
+Esta sección amplía NumPy más allá de ``hacer matrices'': el objetivo es dominar las ideas que hacen a NumPy la base de casi todo en ciencia de datos y ML: \textbf{arrays}, \textbf{formas (shape)}, \textbf{tipos (dtype)}, \textbf{operaciones vectorizadas (ufuncs)}, \textbf{broadcasting} y \textbf{máscaras}.
+
+\subsection{El objeto central: \texttt{ndarray} (shape y dtype)}
+Un \texttt{ndarray} es un arreglo multidimensional homogéneo: todos los elementos tienen el mismo tipo numérico (\texttt{dtype}).
+Dos propiedades mandan:
+\begin{itemize}
+\item \textbf{shape}: cuántas filas/columnas (o dimensiones) tiene.
+\item \textbf{dtype}: tipo de dato (float64, int32, etc.).
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Crear arrays y observar shape/dtype}]
+import numpy as np
+
+a = np.array([1, 2, 3])          # 1D
+b = np.array([[1.0, 2.0], [3.0, 4.0]])  # 2D
+
+print(a.shape, a.dtype)
+print(b.shape, b.dtype)
+\end{lstlisting}
+
+\begin{conceptbox}{Idea práctica}
+\texttt{shape} te dice el ``tamaño geométrico'' de tus datos; \texttt{dtype} te dice el ``costo'' en memoria y qué operaciones son posibles.
+\end{conceptbox}
+
+\subsection{Creación eficiente de arrays}
+Algunas formas típicas de crear datos:
+\begin{itemize}
+\item \texttt{np.zeros}, \texttt{np.ones}: inicialización rápida.
+\item \texttt{np.arange}, \texttt{np.linspace}: secuencias numéricas.
+\item \texttt{np.random.rand}: simulación/ruido (para pruebas).
+\end{itemize}
+
+\begin{lstlisting}[language=Python, caption={Creación rápida de matrices}]
+import numpy as np
+
+Z = np.zeros((3, 4))       # matriz 3x4 llena de 0
+O = np.ones((2, 2))        # matriz 2x2 llena de 1
+x = np.arange(0, 10)       # [0..9]
+t = np.linspace(0, 1, 5)   # 5 puntos entre 0 y 1
+\end{lstlisting}
+
+\subsection{Indexing y slicing (leer sub-zonas del lote)}
+Piensa una matriz como un mapa del lote: puedes seleccionar sub-regiones con slicing.
+
+\begin{lstlisting}[language=Python, caption={Slicing en 2D: sub-zona del mapa}]
+import numpy as np
+
+humedad = np.random.rand(100, 100)
+
+zona_centro = humedad[40:60, 40:60]   # 20x20
+primera_fila = humedad[0, :]          # 100 valores
+primera_col = humedad[:, 0]           # 100 valores
+\end{lstlisting}
+
+\begin{warningbox}{Error común}
+En NumPy, el orden es \texttt{[filas, columnas]}.
+\end{warningbox}
+\newpage
+% ======================================================
+\section{Vectorización con ufuncs: ``sin for''}
+Las operaciones element-wise (por elemento) se aplican a todo el array:
+\begin{lstlisting}[language=Python, caption={Ufuncs: operaciones vectorizadas}]
+import numpy as np
+
+x = np.random.rand(5)
+y = np.sin(x) + np.cos(x)  # aplica a todo el vector
+\end{lstlisting}
+
+\begin{conceptbox}{Conexión con HPC}
+Esto es la base del benchmark del manual: mover el trabajo del intérprete (loop Python) a operaciones vectorizadas.
+\end{conceptbox}
+
+\subsection{Broadcasting: el superpoder}
+Broadcasting describe cómo NumPy trata arreglos de diferentes shapes en operaciones aritméticas; el arreglo pequeño se ``expande'' lógicamente para ser compatible, evitando bucles explícitos y usualmente sin copias innecesarias.
+
+\begin{lstlisting}[language=Python, caption={Broadcasting: sumar vector a cada fila}]
+import numpy as np
+
+A = np.random.rand(3, 4)  # 3x4
+b = np.array([10, 20, 30, 40])  # (4,)
+
+# b se aplica a cada fila de A por broadcasting
+C = A + b
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio (medio): fertilización por franjas}
+Simula un lote \texttt{A} de 100x100 y un vector \texttt{b} de 100 valores
+(fertilización por columna). Usa broadcasting para obtener el lote ajustado \texttt{A+b}.
+\end{agrobox}
+
+\subsection{Reducciones y el parámetro \texttt{axis}}
+Reducciones como \texttt{sum}, \texttt{mean}, \texttt{max} colapsan dimensiones.
+El argumento \texttt{axis} indica sobre qué eje reduces.
+
+\begin{lstlisting}[language=Python, caption={Reducciones por eje}]
+import numpy as np
+
+M = np.random.rand(3, 4)
+
+total = M.sum()            # escalar: suma todo
+por_fila = M.mean(axis=1)  # (3,) promedio por fila
+por_col  = M.mean(axis=0)  # (4,) promedio por columna
+\end{lstlisting}
+
+\begin{conceptbox}{Lectura rápida}
+\texttt{axis=0} suele significar ``colapsar filas'' (resultado por columna).
+\texttt{axis=1} suele significar ``colapsar columnas'' (resultado por fila).
+\end{conceptbox}
+
+\subsection{Máscaras booleanas (boolean indexing)}
+Una condición sobre un array produce un array booleano (True/False) del mismo shape, que puede usarse para seleccionar elementos.
+
+\begin{lstlisting}[language=Python, caption={Máscara + conteo de celdas en sequía}]
+import numpy as np
+
+humedad = np.random.rand(100, 100)
+sequia = humedad < 0.2
+
+area_sequia = np.sum(sequia)  # cuenta True
+\end{lstlisting}
+
+\subsection{\texttt{np.where}: decisiones vectorizadas}
+\texttt{np.where} permite asignar valores en función de una condición, por celda, sin iterar manualmente.
+
+\begin{lstlisting}[language=Python, caption={Mapa de acciones con np.where}]
+import numpy as np
+
+humedad = np.random.rand(10, 10)
+acciones = np.where(humedad < 0.2, "R", ".")  # R=regar, .=normal
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio (difícil): política de riego y drenaje}
+Crea \texttt{acciones} con 3 clases:
+\begin{itemize}
+\item \texttt{"R"} si \texttt{humedad < 0.2}
+\item \texttt{"D"} si \texttt{humedad > 0.85}
+\item \texttt{"."} en otro caso
+\end{itemize}
+y calcula los porcentajes de cada clase usando máscaras.
+\end{agrobox}
+\newpage
+% ======================================================
+% =====================================================
+% Capítulo: Introducción esencial a Matplotlib
+% =====================================================
+\section{Visualización esencial con Matplotlib (desde NumPy)}
+
+La visualización es parte del flujo científico: permite validar datos, detectar outliers y comunicar resultados.
+Como ya estamos usando NumPy (\texttt{np}), el siguiente paso natural es graficar con Matplotlib a través de \texttt{matplotlib.pyplot}.
+
+\begin{conceptbox}{Objetivo}
+Aprender lo mínimo indispensable para:
+\begin{itemize}
+\item Graficar series 1D (líneas).
+\item Comparar mediciones (scatter/barras).
+\item Visualizar una matriz 2D (heatmap con \texttt{imshow}).
+\item Guardar gráficos en \texttt{reports/} con \texttt{savefig}.
+\end{itemize}
+\end{conceptbox}
+
+\subsection{\texttt{pyplot}: la interfaz rápida}
+El flujo típico con \texttt{pyplot} es: crear gráfico, etiquetar, y guardar/mostrar.
+
+\subsection{Gráfico de línea (1D)}
+
+\begin{lstlisting}[language=Python, caption={Línea: serie 1D con etiquetas y leyenda}]
+import numpy as np # importa la libreria numpy, con alias np
+import matplotlib.pyplot as plt # importa la libreria matplotlib con su sublibrería pyplot y alias plt
+
+# Simulación: 24 mediciones de humedad (una por hora)
+# Evalúa la función en una línea que está en el intervalo [0,2pi)
+# Con 24 puntos, no se incluye el extremo derecho
+
+hum = 40 + 10*np.sin(np.linspace(0, 2*np.pi, 24))
+
+
+plt.plot(hum, label="Humedad (%)")  # Grafica la curva
+plt.title("Humedad por hora")       # Título
+plt.xlabel("Hora")                  # Nombre del eje x
+plt.ylabel("Humedad (%)")           # Nombre del eje y
+plt.legend("Np") # leyenda
+plt.show()                          # Muestra la gráfica
+\end{lstlisting}
+
+El gráfico se puede apreciar en la figura \ref{fig:hum}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.3]{humedad.png}
+    \label{fig:hum}
+    \caption{Gráfica generada con los comandos de python}
+\end{figure}
+
+\subsection{Scatter (dispersión): detectar relación y outliers}
+
+Diagrama de dispersión generado por Scatter de python, ver figura \ref{fig:scater}
+\begin{lstlisting}[language=Python, caption={Scatter: temperatura vs humedad}]
+import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(7) # Utiliza una semilla, para que los datos no cambien
+temp = 20 + 10*np.random.rand(100) # Genera una serie aleatoria de temperaturas
+hum  = 30 + 40*np.random.rand(100) # Genera una serie aleatoria de humedades
+
+plt.scatter(temp, hum, s=18) # Utiliza el tipo de gráfica scatter
+plt.title("Relación temperatura vs humedad")
+plt.xlabel("Temperatura (C)")
+plt.ylabel("Humedad (%)")
+plt.show()
+\end{lstlisting}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.3]{scater.png}
+    \caption{Diagrama de dispersión, generada con numpy}
+    \label{fig:scater}
+\end{figure}
+\subsection{Heatmap (2D) con \texttt{imshow} + \texttt{colorbar}}
+Para una matriz (por ejemplo, mapa de humedad), \texttt{imshow} la dibuja como imagen y \texttt{colorbar} añade la escala de colores.
+
+\begin{lstlisting}[language=Python, caption={Heatmap: humedad 2D con colorbar}]
+import numpy as np
+import matplotlib.pyplot as plt
+
+humedad = np.random.rand(50, 50) # Genera una matriz de valores aleatorios
+
+plt.imshow(humedad, cmap="viridis", interpolation="nearest")  # Muestra el mapa de calor
+plt.colorbar()                                                # Colorea
+plt.title("Mapa de humedad (50x50)")
+plt.show()
+\end{lstlisting}
+
+Se puede apreciar el mapa de calor en la figura \ref{fig:calor}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.3]{calor.png}
+    \caption{Mapa de calor con numpy}
+    \label{fig:calor}
+\end{figure}
+\subsection{Guardar gráficos con \texttt{savefig}}
+Para incluir resultados en el reporte, lo ideal es guardar figuras en archivos (por ejemplo PNG) usando \texttt{savefig}.
+
+\begin{lstlisting}[language=Python, caption={Guardar figura a mapa\_humedad.png}]
+import os # Importa comandos del sistema
+import numpy as np
+import matplotlib.pyplot as plt
+
+os.makedirs("reports", exist_ok=True) # Verifica que exista la carpeta reports
+
+humedad = np.random.rand(50, 50)
+
+plt.imshow(humedad, cmap="viridis", interpolation="nearest")
+plt.colorbar()
+plt.title("Mapa de humedad (50x50)")
+
+plt.savefig("reports/mapa_humedad.png", dpi=150, bbox_inches="tight")  # Guarda la figura con el nombre mapa_humedad.png en la carpeta reports
+\end{lstlisting}
+
+\begin{warningbox}{Tip práctico}
+Si vas a usar \texttt{plt.show()}, guarda antes con \texttt{plt.savefig(...)} para evitar perder la figura en algunos flujos de ejecución.
+\end{warningbox}
+
+\subsection{Ejercicios}
+\begin{agrobox}{Ejercicio (básico): dos parcelas}
+Grafica dos series (dos parcelas) en la misma figura usando \texttt{label=} y \texttt{plt.legend()}.
+\end{agrobox}
+
+\begin{agrobox}{Ejercicio (medio): mapa de sequía}
+Dada una matriz \texttt{humedad}, crea \texttt{sequia = humedad < 0.2} y grafica esa máscara con \texttt{imshow}.
+\end{agrobox}
+
+\begin{agrobox}{Ejercicio (difícil): diagnóstico 2x2}
+Construye una figura con 4 subgráficos:
+\begin{itemize}
+\item mapa de humedad,
+\item máscara de sequía,
+\item máscara de inundación,
+\item mapa de acciones (convertido a números).
+\end{itemize}
+Guárdala como \texttt{reports/diagnostico.png}.
+\end{agrobox}
+\newpage
+% =====================================================
+\section*{Prefacio: de scripts a sistemas que escalan}
+Vamos a profesionalizar el código: validar datos, medir rendimiento y usar NumPy para operar por bloques.
+
+\begin{conceptbox}{Definition of Done (DoD)}
+Al terminar, debes tener:
+\begin{itemize}
+\item Un validador \textit{fail fast} para registros de sensores.
+\item Un pipeline CSV sucio \(\rightarrow\) CSV limpio (sin pandas).
+\item Un benchmark reproducible con \texttt{time.perf\_counter()} (loop vs vectorizado).
+\item Un mapa de lote (matriz) con máscaras booleanas y \texttt{np.where}.
+\item Un reporte en \LaTeX{} (manual en Semana 2).
+\end{itemize}
+\end{conceptbox}
+
+\newpage
+
+% =====================================================
+\section{Programación defensiva (Fail Fast)}
+
+\subsection{Por qué esto es ingeniería}
+Un sensor puede fallar. Un archivo puede venir mal. Un dato puede ser imposible.
+Si el sistema no valida, el error se propaga.
+
+\begin{conceptbox}{Regla}
+Valida temprano, falla claro y registra qué descartaste.
+\end{conceptbox}
+
+\subsection{Programa 1: Validador con guard clauses (comentado)}
+
+\begin{lstlisting}[language=Python, caption={Programa 1: Validación fail fast con guard clauses}]
+# Programa 1:
+# Este script enseña a validar datos antes de procesarlos.
+# La idea es que el sistema "falle rápido" (fail fast) con mensajes claros,
+# en lugar de continuar con datos inválidos y generar resultados incorrectos.
+
+from __future__ import annotations
+
+
+def validar_sensor_row(row: dict) -> dict:
+    """
+    Recibe un registro tipo dict y lo valida.
+    Si algo está mal: lanza ValueError (falla rápido).
+    Si todo está bien: devuelve un dict limpio/normalizado.
+
+    Formato esperado:
+      {"id": "SENSOR_01", "temp": 24.2, "hum": 55}
+    """
+
+    # 1) Validar existencia y calidad del ID
+    # Guard clause: si no hay id, no seguimos.
+    if "id" not in row or not str(row["id"]).strip():
+        raise ValueError("Falta 'id' o está vacío.")
+
+    # Normalización: quitar espacios y usar mayúsculas
+    sensor_id = str(row["id"]).strip().upper()
+
+    # 2) Validar temperatura
+    # Guard clause: debe existir la llave
+    if "temp" not in row:
+        raise ValueError("Falta 'temp' (temperatura).")
+
+    # Guard clause: debe ser numérica
+    if not isinstance(row["temp"], (int, float)):
+        raise ValueError("'temp' debe ser numérica (int/float).")
+
+    temp = float(row["temp"])
+
+    # Guard clause: rango razonable para sensores agrícolas
+    if temp < -10 or temp > 60:
+        raise ValueError("'temp' fuera de rango [-10, 60].")
+
+    # 3) Validar humedad
+    if "hum" not in row:
+        raise ValueError("Falta 'hum' (humedad).")
+
+    if not isinstance(row["hum"], (int, float)):
+        raise ValueError("'hum' debe ser numérica (int/float).")
+
+    hum = float(row["hum"])
+
+    if hum < 0 or hum > 100:
+        raise ValueError("'hum' fuera de rango [0, 100].")
+
+    # Si llegamos aquí: el registro es válido.
+    # Devolvemos una versión limpia.
+    return {"id": sensor_id, "temp": temp, "hum": hum}
+
+
+def main() -> None:
+    # Dataset simulado: incluye registros válidos e inválidos a propósito.
+    datos = [
+        {"id": "sensor_01", "temp": 24.2, "hum": 55},  # válido
+        {"id": "SENSOR_02", "temp": 25.1, "hum": 56},  # válido
+        {"id": "SENSOR_XX", "temp": 999, "hum": 10},   # inválido (temp)
+        {"id": "", "temp": 23.0, "hum": 50},          # inválido (id)
+        {"id": "SENSOR_03", "temp": "N/A", "hum": 40}, # inválido (tipo temp)
+    ]
+
+    validos = 0
+    motivos = {}
+
+    # Recorremos el dataset, validamos y contamos errores por motivo.
+    for row in datos:
+        try:
+            _ = validar_sensor_row(row)
+            validos += 1
+        except ValueError as e:
+            motivo = str(e)
+            motivos[motivo] = motivos.get(motivo, 0) + 1
+
+    print(f"Validos: {validos}/{len(datos)}")
+    print("Motivos de descarte:")
+    for k, v in sorted(motivos.items(), key=lambda x: x[1], reverse=True):
+        print(f"  - {k}: {v}")
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio 1}
+Modifica el validador para aceptar \texttt{hum} como string numérico (por ejemplo ``"45"``) convirtiéndolo a float, pero seguir rechazando ``"N/A"``.
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+\section{CSV sucio \texorpdfstring{\(\rightarrow\)}{->} CSV limpio (sin pandas)}
+\subsection{Por qué sin pandas}
+En esta semana, el objetivo es entender el pipeline y las validaciones sin ``magia''.
+
+\subsection{Programa 2: Generar un CSV sucio (comentado)}
+
+\begin{lstlisting}[language=Python, caption={Programa 2: Generar un CSV sucio (con errores intencionales)}]
+# Programa 2:
+# Genera un archivo CSV con datos "sucios" (errores intencionales).
+# Esto simula el mundo real: sensores que envían N/A, vacíos o valores imposibles.
+
+from __future__ import annotations
+
+import random
+
+
+def generar_csv_sucio(path: str, n: int = 40) -> None:
+    # Semilla para reproducibilidad: mismos datos en cada ejecución
+    random.seed(7)
+
+    sensores = ["SENSOR_01", "SENSOR_02", "SENSOR_03", "SENSOR_04"]
+
+    # Abrimos el archivo en modo escritura y ponemos header
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("id_sensor,fecha,temperatura,humedad\n")
+
+        for i in range(n):
+            s = random.choice(sensores)
+            fecha = f"2026-01-01 00:{i:02d}:00"
+
+            # Inyectamos errores en ciertas filas (por índice)
+            if i in (5, 17):
+                temp = "N/A"      # error: no numérico
+            elif i in (8,):
+                temp = 999        # error: imposible
+            else:
+                temp = round(random.uniform(18, 35), 1)
+
+            if i in (3, 22):
+                hum = ""          # error: faltante
+            elif i in (12,):
+                hum = 200         # error: fuera de rango
+            else:
+                hum = random.randint(30, 90)
+
+            # Escribimos la fila al CSV
+            f.write(f"{s},{fecha},{temp},{hum}\n")
+
+
+if __name__ == "__main__":
+    generar_csv_sucio("data/raw/sensores_sucio.csv", n=40)
+    print("OK: generado data/raw/sensores_sucio.csv")
+\end{lstlisting}
+
+\subsection{Programa 3: Limpiar el CSV (comentado)}
+
+\begin{lstlisting}[language=Python, caption={Programa 3: Limpieza CSV sin pandas + reporte de errores}]
+# Programa 3:
+# Lee un CSV sucio línea por línea, valida y escribe un CSV limpio.
+# Además genera un reporte de limpieza (cuántos descartó y por qué).
+
+from __future__ import annotations
+
+
+def validar_sensor_row(row: dict) -> dict:
+    # Reutilizamos el validador (versión corta, misma lógica del Programa 1)
+    if "id" not in row or not str(row["id"]).strip():
+        raise ValueError("Falta 'id' o está vacío.")
+
+    sensor_id = str(row["id"]).strip().upper()
+
+    if "temp" not in row:
+        raise ValueError("Falta 'temp'.")
+    if not isinstance(row["temp"], (int, float)):
+        raise ValueError("'temp' debe ser numérica.")
+    temp = float(row["temp"])
+    if temp < -10 or temp > 60:
+        raise ValueError("'temp' fuera de rango [-10, 60].")
+
+    if "hum" not in row:
+        raise ValueError("Falta 'hum'.")
+    if not isinstance(row["hum"], (int, float)):
+        raise ValueError("'hum' debe ser numérica.")
+    hum = float(row["hum"])
+    if hum < 0 or hum > 100:
+        raise ValueError("'hum' fuera de rango [0, 100].")
+
+    return {"id": sensor_id, "temp": temp, "hum": hum}
+
+
+def parse_row(linea: str) -> dict:
+    # Convertimos una línea CSV en un dict con tipos correctos
+    parts = linea.strip().split(",")
+    if len(parts) != 4:
+        raise ValueError("Fila corrupta: columnas != 4")
+
+    id_sensor, fecha, temp_str, hum_str = parts
+
+    # Temperatura: detectar faltantes o N/A
+    if temp_str == "" or temp_str.upper() == "N/A":
+        raise ValueError("Temperatura faltante o N/A")
+    temp = float(temp_str)
+
+    # Humedad: detectar faltantes
+    if hum_str == "":
+        raise ValueError("Humedad faltante")
+    hum = float(hum_str)
+
+    # Validación de rangos (fail fast)
+    _ = validar_sensor_row({"id": id_sensor, "temp": temp, "hum": hum})
+
+    # Si pasa: devolvemos un registro con fecha incluida
+    return {"id": id_sensor.strip().upper(), "fecha": fecha, "temp": temp, "hum": hum}
+
+
+def limpiar_csv(in_path: str, out_path: str, report_path: str) -> None:
+    total = 0
+    validos = 0
+    motivos = {}
+
+    # Leemos el CSV de entrada y escribimos uno nuevo (limpio)
+    with open(in_path, "r", encoding="utf-8") as fin, open(out_path, "w", encoding="utf-8") as fout:
+        header = fin.readline().strip()
+        fout.write(header + "\n")
+
+        for linea in fin:
+            total += 1
+            try:
+                row = parse_row(linea)
+                fout.write(f"{row['id']},{row['fecha']},{row['temp']},{row['hum']}\n")
+                validos += 1
+            except Exception as e:
+                m = str(e)
+                motivos[m] = motivos.get(m, 0) + 1
+
+    # Escribir reporte de limpieza
+    top = sorted(motivos.items(), key=lambda x: x[1], reverse=True)[:3]
+    with open(report_path, "w", encoding="utf-8") as frep:
+        frep.write("=== REPORTE LIMPIEZA CSV ===\n")
+        frep.write(f"Total filas (sin header): {total}\n")
+        frep.write(f"Validas: {validos}\n")
+        frep.write(f"Descartadas: {total - validos}\n\n")
+        frep.write("Top 3 motivos:\n")
+        for motivo, c in top:
+            frep.write(f"- {motivo}: {c}\n")
+
+
+if __name__ == "__main__":
+    # Nota: este script asume que el CSV sucio ya existe.
+    # En el taller, primero se ejecuta Programa 2 para generarlo.
+    limpiar_csv(
+        in_path="data/raw/sensores_sucio.csv",
+        out_path="data/processed/sensores_limpio.csv",
+        report_path="reports/reporte_limpieza.txt",
+    )
+    print("OK: generado data/processed/sensores_limpio.csv y reports/reporte_limpieza.txt")
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio 2}
+Extiende \texttt{parse\_row()} para registrar también un error cuando la fecha esté vacía o no tenga el formato \texttt{YYYY-MM-DD HH:MM:SS}.
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+\section{HPC con NumPy — benchmark (loop vs vectorización)}
+
+\subsection{Por qué medir}
+Si no mides, solo estás adivinando.
+Para comparar dos enfoques, necesitas un benchmark repetible.
+
+\subsection{Programa 4: Benchmark con \texttt{time.perf\_counter()} (comentado)}
+
+\begin{lstlisting}[language=Python, caption={Programa 4: Benchmark con \texttt{time.perf\_counter()}}]
+# Programa 4:
+# Compara el rendimiento de un bucle for vs una operación vectorizada en NumPy.
+# Se usa time.perf_counter() porque ofrece alta resolución para medir tiempos.
+
+from __future__ import annotations
+
+import time
+import numpy as np
+
+
+def loop_for(x: np.ndarray) -> np.ndarray:
+    # Este enfoque hace 1 millón de iteraciones en Python.
+    # Cada iteración tiene overhead del intérprete.
+    y = np.empty_like(x)
+    for i in range(x.shape[0]):
+        y[i] = np.sin(x[i]) + np.cos(x[i])
+    return y
+
+
+def vectorizado(x: np.ndarray) -> np.ndarray:
+    # Este enfoque delega el trabajo a NumPy (internamente C optimizado).
+    # Opera sobre todo el array sin iterar explícitamente en Python.
+    return np.sin(x) + np.cos(x)
+
+
+def main() -> None:
+    n = 1_000_000
+    x = np.random.rand(n).astype(np.float64)
+
+    # Medición for-loop
+    t0 = time.perf_counter()
+    y1 = loop_for(x)
+    t_for = time.perf_counter() - t0
+
+    # Medición vectorizada
+    t0 = time.perf_counter()
+    y2 = vectorizado(x)
+    t_vec = time.perf_counter() - t0
+
+    # Validación numérica: deben ser muy parecidos
+    diff = float(np.max(np.abs(y1 - y2)))
+
+    # Speedup: cuántas veces es más rápido lo vectorizado
+    speedup = t_for / t_vec if t_vec > 0 else float("inf")
+
+    print(f"Tiempo for-loop:    {t_for:.4f} s")
+    print(f"Tiempo vectorizado: {t_vec:.4f} s")
+    print(f"Speedup:            {speedup:.2f}x")
+    print(f"Max diff:           {diff:.6e}")
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio 3}
+Ejecuta el benchmark 3 veces. Anota los 3 speedups y reporta el promedio en tu PDF.
+\end{agrobox}
+
+\newpage
+% =====================================================
+\section{Trabajar con Archivos .npy: El Formato Binario de NumPy}
+
+Cuando trabajas con datos numéricos de sensores agrícolas (miles o millones de mediciones), el formato CSV puede volverse ineficiente. NumPy ofrece un formato binario optimizado: \texttt{.npy}.
+
+\subsection{¿Qué es un archivo .npy?}
+
+Un archivo \texttt{.npy} es el formato nativo de NumPy para almacenar arrays en disco de forma binaria. A diferencia de CSV (texto plano), \texttt{.npy} guarda los datos en el formato exacto que NumPy usa en memoria, lo que resulta en:
+
+\begin{itemize}
+    \item \textbf{Velocidad}: Carga 10-50x más rápido que CSV.
+    \item \textbf{Tamaño}: Archivos más pequeños (sin necesidad de convertir números a texto).
+    \item \textbf{Precisión}: Mantiene la precisión numérica exacta (float64, int32, etc.).
+    \item \textbf{Metadatos}: Guarda automáticamente el shape y dtype del array.
+\end{itemize}
+
+\subsection{Comparación: CSV vs .npy}
+
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Característica} & \textbf{CSV} & \textbf{.npy} \\
+\midrule
+Formato & Texto plano & Binario \\
+Tamaño (1M valores) & $\sim$10 MB & $\sim$4 MB \\
+Tiempo de carga & $\sim$2 segundos & $\sim$0.05 segundos \\
+Velocidad relativa & 1x & \textbf{40x más rápido} \\
+Legible en Excel & Sí & No \\
+Uso típico & Compartir datos & Procesamiento científico \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Guardar y cargar arrays}
+
+\subsubsection{Guardar datos en .npy}
+
+\begin{lstlisting}[language=Python, caption={Guardar datos de sensor en formato .npy}]
+import numpy as np
+
+# Ejemplo 1: Guardar datos simulados
+humedad = np.random.rand(365, 100) * 100  # 1 año, 100 zonas
+np.save('humedad_finca.npy', humedad)
+
+# Ejemplo 2: Guardar datos reales de un CSV procesado
+datos_sensor = []
+with open('sensor_2025.csv', 'r') as f:
+    reader = csv.DictReader(f)
+    for fila in reader:
+        datos_sensor.append(float(fila['humedad']))
+
+# Convertir a array y guardar
+datos_np = np.array(datos_sensor)
+np.save('humedad_real_2025.npy', datos_np)
+\end{lstlisting}
+
+\subsubsection{Cargar datos desde .npy}
+
+\begin{lstlisting}[language=Python, caption={Cargar y verificar datos guardados}]
+import numpy as np
+
+# Cargar el array
+humedad = np.load('humedad_finca.npy')
+
+# Verificar metadatos
+print(f"Shape: {humedad.shape}")      # Dimensiones
+print(f"Dtype: {humedad.dtype}")      # Tipo de dato
+print(f"Tamaño: {humedad.size:,}")    # Total de elementos
+
+# Ejemplo de salida:
+# Shape: (365, 100)
+# Dtype: float64
+# Tamaño: 36,500
+\end{lstlisting}
+
+El archivo se carga en milisegundos, sin necesidad de parsear texto ni convertir tipos.
+
+\subsection{Caso de uso: Sensor agrícola con 1 año de datos}
+
+Imagina un sensor IoT que mide humedad del suelo cada 5 minutos durante un año completo:
+
+\begin{itemize}
+    \item Frecuencia: 12 lecturas/hora × 24 horas × 365 días = \textbf{105,120 mediciones}.
+    \item CSV: Archivo de $\sim$2.5 MB, carga en $\sim$1.2 segundos.
+    \item NPY: Archivo de $\sim$820 KB, carga en $\sim$0.03 segundos.
+\end{itemize}
+
+Si tu pipeline procesa estos datos 100 veces al día (análisis, validaciones, visualizaciones), ahorras \textbf{2 minutos diarios} solo en tiempo de lectura.
+
+\subsection{Comando rápido: Generar dataset de prueba}
+
+Para los talleres, puedes generar datasets simulados directamente desde la terminal:
+
+\begin{lstlisting}[language=bash]
+# Generar matriz 365x100 con valores [0,100]
+python -c "import numpy as np; np.save('humedad_finca.npy', np.random.rand(365, 100) * 100)"
+\end{lstlisting}
+
+Desglose del comando:
+\begin{itemize}
+    \item \texttt{python -c "..."}: Ejecuta código Python en una sola línea.
+    \item \texttt{np.random.rand(365, 100)}: Crea matriz 365×100 con valores aleatorios [0,1].
+    \item \texttt{* 100}: Escala a rango [0,100] (porcentajes).
+    \item \texttt{np.save(...)}: Guarda en formato binario .npy.
+\end{itemize}
+
+\subsection{Convertir .npy y .npz de vuelta a CSV}
+
+Una ventaja del formato .npy es que siempre puedes convertirlo de vuelta a CSV cuando necesites compartir los datos o abrirlos en Excel. NumPy incluye la función \texttt{np.savetxt()} para esta tarea.
+
+\subsubsection{Conversión básica con np.savetxt()}
+
+\begin{lstlisting}[language=Python, caption={Convertir .npy a CSV}]
+import numpy as np
+
+# Cargar el archivo .npy
+humedad = np.load('humedad_finca.npy')
+
+# Guardar como CSV
+np.savetxt('humedad_finca.csv', humedad, delimiter=',', fmt='%.2f')
+\end{lstlisting}
+
+\textbf{Parámetros importantes:}
+\begin{itemize}
+    \item \texttt{delimiter=','}: Define el separador de columnas (coma para CSV).
+    \item \texttt{fmt='\%.2f'}: Formato numérico con 2 decimales. Ajusta según precisión necesaria.
+\end{itemize}
+
+\subsubsection{Agregar nombres de columnas (header)}
+
+Para que el CSV sea más legible, puedes agregar un encabezado:
+
+\begin{lstlisting}[language=Python, caption={CSV con nombres de columnas}]
+import numpy as np
+
+humedad = np.load('humedad_finca.npy')
+
+# Crear header con nombres personalizados
+header = ','.join([f'zona_{i+1}' for i in range(humedad.shape[1])])
+
+np.savetxt('humedad_finca.csv',
+           humedad,
+           delimiter=',',
+           fmt='%.2f',
+           header=header,
+           comments='')  # Evita el simbolo # en el header
+\end{lstlisting}
+
+El CSV resultante tendrá la primera fila con: \texttt{zona\_1,zona\_2,zona\_3,...}
+
+\subsubsection{Convertir archivos .npz (múltiples arrays)}
+
+Si guardaste varios arrays en un archivo \texttt{.npz}, puedes extraerlos y convertir cada uno:
+
+\begin{lstlisting}[language=Python, caption={Convertir .npz a múltiples CSV}]
+import numpy as np
+
+# Cargar el archivo .npz
+datos = np.load('datos_finca.npz')
+
+# Guardar cada array por separado
+np.savetxt('humedad.csv', datos['humedad'], delimiter=',', fmt='%.2f')
+np.savetxt('temperatura.csv', datos['temperatura'], delimiter=',', fmt='%.2f')
+\end{lstlisting}
+
+O combinarlos en un solo CSV con múltiples columnas:
+
+\begin{lstlisting}[language=Python, caption={Combinar arrays en un solo CSV}]
+import numpy as np
+
+datos = np.load('datos_finca.npz')
+
+# Combinar columnas horizontalmente
+combinado = np.column_stack([datos['humedad'], datos['temperatura']])
+
+np.savetxt('datos_completos.csv',
+           combinado,
+           delimiter=',',
+           fmt='%.2f',
+           header='humedad,temperatura',
+           comments='')
+\end{lstlisting}
+
+\subsubsection{Script reutilizable de conversión}
+
+Para facilitar la conversión frecuente, puedes crear un script genérico:
+
+\begin{lstlisting}[language=Python, caption={Conversor .npy a CSV reutilizable}]
+"""
+Convertir archivos .npy a CSV para compartir o visualizar
+"""
+import numpy as np
+import os
+
+def npy_to_csv(npy_path, csv_path, decimales=2):
+    """
+    Convierte un archivo .npy a CSV
+
+    Args:
+        npy_path: Ruta del archivo .npy
+        csv_path: Ruta de salida .csv
+        decimales: Numero de decimales a guardar
+    """
+    datos = np.load(npy_path)
+
+    # Formato segun decimales
+    fmt = f'%.{decimales}f'
+
+    np.savetxt(csv_path, datos, delimiter=',', fmt=fmt)
+
+    print(f"OK: Convertido {npy_path} -> {csv_path}")
+    print(f"  Shape: {datos.shape}")
+    print(f"  Tamano CSV: {os.path.getsize(csv_path) / 1024:.1f} KB")
+
+# Uso
+if __name__ == "__main__":
+    npy_to_csv('humedad_finca.npy', 'humedad_finca.csv', decimales=1)
+\end{lstlisting}
+
+\begin{agrobox}{Flujo de trabajo típico en proyectos agrícolas}
+\begin{enumerate}
+    \item \textbf{Recolección}: Sensores IoT envían datos cada hora (guardados en CSV por el sistema).
+    \item \textbf{Procesamiento}: Conviertes CSV a .npy para análisis rápido con NumPy.
+    \item \textbf{Análisis}: Todo el pipeline científico trabaja con .npy (rápido).
+    \item \textbf{Entrega}: Conviertes resultados finales a CSV para compartir con agrónomos.
+\end{enumerate}
+\end{agrobox}
+
+\textbf{Regla práctica}: Usa .npy internamente en tu código, y exporta a CSV solo cuando necesites compartir o visualizar en herramientas externas.
+
+\subsection{Bonus: Guardar múltiples arrays en un solo archivo}
+
+NumPy también ofrece \texttt{.npz} (comprimido) para guardar varios arrays relacionados:
+
+\begin{lstlisting}[language=Python, caption={Guardar múltiples variables en .npz}]
+import numpy as np
+
+humedad = np.random.rand(365, 100)
+temperatura = np.random.rand(365, 100)
+timestamps = np.arange(365)
+
+# Guardar todo junto
+np.savez('datos_finca.npz',
+         humedad=humedad,
+         temperatura=temperatura,
+         dias=timestamps)
+
+# Cargar
+datos = np.load('datos_finca.npz')
+print(datos['humedad'].shape)
+print(datos['temperatura'].shape)
+\end{lstlisting}
+
+Esto es ideal para datasets complejos donde múltiples sensores están relacionados temporalmente.
+
+\subsection{Cuándo usar cada formato}
+
+\begin{agrobox}{Regla práctica}
+\begin{itemize}
+    \item \textbf{Usa CSV} cuando necesites:
+    \begin{itemize}
+        \item Abrir los datos en Excel o Google Sheets.
+        \item Compartir con personas sin Python.
+        \item Datos pequeños ($<$10,000 filas).
+    \end{itemize}
+    \item \textbf{Usa .npy} cuando necesites:
+    \begin{itemize}
+        \item Procesar datos repetidamente en Python.
+        \item Trabajar con arrays grandes ($>$100,000 valores).
+        \item Máxima velocidad y precisión numérica.
+    \end{itemize}
+\end{itemize}
+\end{agrobox}
+
+
+\newpage
+% =====================================================
+\section{Lógica espacial con matrices (máscaras + np.where)}
+
+Las máscaras booleanas permiten seleccionar celdas sin usar \texttt{if} por celda.
+
+\subsection{Programa 5: Mapa de lote + acciones con \texttt{np.where} (comentado)}
+
+\begin{lstlisting}[language=Python, caption={Programa 5: Mapa de lote (200x200) con máscaras y \texttt{np.where}}]
+# Programa 5:
+# Simula un lote como una matriz de humedad (200x200).
+# Calcula sequía/inundación usando máscaras booleanas.
+# Luego decide acciones por celda con np.where().
+
+from __future__ import annotations
+
+import numpy as np
+
+
+def render_ascii(mapa: np.ndarray, step: int = 10) -> str:
+    """
+    Render ASCII para ver un mapa grande en consola.
+    step=10 significa que "muestreamos" 1 de cada 10 celdas (reduce tamaño).
+    """
+    lines = []
+    for r in range(0, mapa.shape[0], step):
+        lines.append("".join(mapa[r, ::step].tolist()))
+    return "\n".join(lines)
+
+
+def main() -> None:
+    np.random.seed(7)
+
+    # Matriz 200x200 con valores en [0,1): simula humedad normalizada
+    humedad = np.random.rand(200, 200)
+
+    # Umbrales de decisión
+    umbral_sequia = 0.2
+    umbral_inund = 0.85
+
+    # Máscaras: arrays booleanos (True/False) del mismo tamaño
+    sequia = humedad < umbral_sequia
+    inundacion = humedad > umbral_inund
+
+    # Porcentajes: mean() de booleanos equivale a proporción de True
+    pct_sequia = 100.0 * float(sequia.mean())
+    pct_inund = 100.0 * float(inundacion.mean())
+
+    # Presupuesto hídrico:
+    # Queremos subir humedad a 0.5 solo donde esté por debajo de 0.5.
+    objetivo = 0.5
+    agua_por_celda = np.where(humedad < objetivo, (objetivo - humedad), 0.0)
+    agua_total = float(np.sum(agua_por_celda))
+
+    # Acciones por celda (caracter):
+    # R = regar (sequia)
+    # D = drenaje (inundación)
+    # . = normal
+    acciones = np.where(sequia, "R", np.where(inundacion, "D", "."))
+
+    print("=== Resumen lote (200x200) ===")
+    print(f"% sequía (<{umbral_sequia}):     {pct_sequia:.2f}%")
+    print(f"% inundación (>{umbral_inund}): {pct_inund:.2f}%")
+    print(f"Agua total requerida (objetivo={objetivo}): {agua_total:.2f}")
+
+    print("\nMapa ASCII (muestreo cada 10 celdas):")
+    print(render_ascii(acciones, step=10))
+
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\begin{agrobox}{Ejercicio 4 (medio)}
+Cambia los umbrales y analiza cómo cambia:
+\begin{itemize}
+\item \% de sequía
+\item \% de inundación
+\item agua total requerida
+\end{itemize}
+Registra 2 configuraciones y compáralas en tu PDF.
+\end{agrobox}
+
+\newpage
+
+% =====================================================
+
+\section*{Reto Final Integrador (Semana 2)}
+
+\begin{agrobox}{Artefactos mínimos}
+Debes dejar estos archivos en el repositorio:
+\begin{itemize}
+\item \texttt{data/raw/sensores\_sucio.csv}
+\item \texttt{data/processed/sensores\_limpio.csv}
+\item \texttt{reports/reporte\_limpieza.txt}
+\item \texttt{reports/decision\_hidrica.txt} (resumen del lote)
+\item \texttt{report/main.pdf}
+\end{itemize}
+\end{agrobox}
+
+\begin{conceptbox}{Checklist Git}
+\begin{itemize}
+\item Mínimo 3 commits claros.
+\item Los scripts se pueden ejecutar en orden sin errores.
+\item El PDF existe y resume resultados.
+\end{itemize}
+\end{conceptbox}
+
+% =====================================================
+\newpage
+\section{Fundamentos Algorítmicos para Series Temporales}
+
+Para desarrollar el taller de análisis de sensores IoT, es necesario dominar cuatro patrones fundamentales de manipulación de datos en Python estándar. A continuación, se describen las estrategias recomendadas para abordar cada fase del procesamiento.
+
+\subsection{Patrón de Agrupación (Group By)}
+Los datos de sensores suelen llegar en formato "plano" (una lista de filas donde los IDs de los sensores se repiten). Para analizar cada sensor individualmente, debemos transformar esta lista plana en una estructura jerárquica: un diccionario de listas.
+
+La lógica consiste en iterar sobre cada lectura y decidir dinámicamente:
+\begin{itemize}
+    \item Si el ID del sensor \textbf{no existe} en nuestro diccionario, creamos una entrada con una lista vacía.
+    \item Independientemente de lo anterior, agregamos la lectura actual a la lista de ese ID.
+\end{itemize}
+
+\begin{lstlisting}[caption={Pseudocódigo para agrupar datos}]
+datos_agrupados = {}
+
+for fila in datos_crudos:
+    clave = fila['id']
+
+    # Inicializacion perezosa (Lazy Initialization)
+    if clave not in datos_agrupados:
+        datos_agrupados[clave] = []
+
+    datos_agrupados[clave].append(fila)
+\end{lstlisting}
+
+\subsection{Limpieza y Conversión de Tipos (Casting)}
+El módulo \texttt{csv} de Python lee todos los datos como cadenas de texto (\texttt{str}). Es un error común intentar realizar operaciones matemáticas (suma, promedio, comparaciones) sin convertir previamente los datos.
+
+La forma más eficiente ("Pythonic") de extraer y convertir una columna completa de datos es utilizando \textit{List Comprehensions}:
+
+\begin{lstlisting}[caption={Extracción y conversión eficiente}]
+# Incorrecto (generará TypeError):
+# promedio = sum(lecturas) / len(lecturas)
+
+# Correcto:
+valores_float = [float(x['temperatura']) for x in lista_lecturas]
+promedio = sum(valores_float) / len(valores_float)
+\end{lstlisting}
+
+\subsection{Lógica de Estado para Eventos Temporales}
+Detectar un "pico" de temperatura es trivial (un simple \texttt{if}). Sin embargo, detectar un evento sostenido (ej. "temperatura alta por más de 1 hora") requiere memoria. Como procesamos las lecturas en orden cronológico, necesitamos una variable de estado o "contador de racha".
+
+El algoritmo funciona como una máquina de estados simple:
+\begin{enumerate}
+    \item Si la condición se cumple (ej. $T > 30$), incrementamos el contador.
+    \item Si la condición \textbf{no} se cumple, el evento se rompió: reiniciamos el contador a cero.
+    \item Verificamos si el contador alcanzó el umbral temporal deseado (ej. si cada lectura es de 5 min, 1 hora equivale a un contador de 12).
+\end{enumerate}
+
+\begin{lstlisting}[caption={Algoritmo de detección de rachas}]
+contador = 0
+umbral_lecturas = 12  # Equivalente a 1 hora
+
+for lectura in historial:
+    if lectura > 30:
+        contador += 1
+    else:
+        # La racha se rompio, verificar si fue critica antes de reiniciar
+        if contador >= umbral_lecturas:
+            registrar_alerta()
+        contador = 0 # Reset
+\end{lstlisting}
+
+\subsection{Persistencia de Resultados}
+Finalmente, para exportar estructuras complejas (como diccionarios) a un archivo CSV, utilizamos la clase \texttt{csv.DictWriter}. Es crucial definir previamente los nombres de las columnas (\texttt{fieldnames}) y asegurarse de escribir el encabezado antes de volcar los datos.
+
+\begin{lstlisting}[caption={Escritura de diccionarios a CSV}]
+columnas = ['id', 'promedio', 'maximo']
+
+with open('resumen.csv', 'w') as f:
+    writer = csv.DictWriter(f, fieldnames=columnas)
+    writer.writeheader()
+    # writerows espera una lista de diccionarios
+    writer.writerows(lista_de_resultados)
+\end{lstlisting}
+
+% ======================================================
+\newpage
+
+\section{Caso de Estudio Integrador: El Monitor de Voltaje}
+
+Para aterrizar los conceptos anteriores, analicemos un problema simplificado que simula la estructura del taller real.
+
+\subsection{El Problema}
+Supongamos que recibimos datos crudos de baterías de drones. Necesitamos:
+\begin{enumerate}
+    \item Agrupar las lecturas por \texttt{id\_dron}.
+    \item Calcular el voltaje promedio.
+    \item Detectar si el voltaje cae por debajo de 10V durante \textbf{3 lecturas consecutivas} (indicador de falla inminente).
+\end{enumerate}
+
+\subsection{Solución Completa Comentada}
+A continuación, se presenta un script que integra los cuatro patrones fundamentales explicados anteriormente. Observe cómo los datos fluyen desde la lista cruda hasta el reporte final.
+
+\begin{lstlisting}[caption={Integración de conceptos: Análisis de Baterías (Detallado)}, label={lst:baterias}]
+import csv # Necesario para leer/escribir archivos CSV (aunque aqui simulamos)
+
+# 1. DATOS SIMULADOS: Imaginemos que esto es lo que leimos del archivo CSV
+# Notese que los valores numericos vienen como cadenas de texto ('12.5')
+datos_crudos = [
+    {'id': 'D01', 'voltaje': '12.5'}, {'id': 'D02', 'voltaje': '11.0'},
+    {'id': 'D01', 'voltaje': '9.0'},  {'id': 'D01', 'voltaje': '8.5'},
+    {'id': 'D01', 'voltaje': '9.5'},  {'id': 'D02', 'voltaje': '10.8'}
+]
+
+def main():
+    # --- PASO 1: AGROUPACION (De lista plana a diccionario organizado) ---
+    grupos = {} # Diccionario vacio donde guardaremos { 'ID': [lista_de_filas] }
+
+    for lectura in datos_crudos:       # Recorremos cada fila del CSV original
+        d_id = lectura['id']           # Extraemos el ID para usarlo como clave
+
+        if d_id not in grupos:         # Si es la primera vez que vemos este ID...
+            grupos[d_id] = []          # ...inicializamos su lista vacia
+
+        grupos[d_id].append(lectura)   # Agregamos la fila actual a la lista de ese ID
+
+    reporte_final = [] # Aqui acumularemos los resultados procesados
+
+    # --- PASO 2: PROCESAMIENTO (Iterar por cada grupo/Dron individualmente) ---
+    # .items() nos da la clave (d_id) y el valor (lista_lecturas) al mismo tiempo
+    for d_id, lista_lecturas in grupos.items():
+
+        # --- PASO 3: CASTING (Limpieza de datos) ---
+        # Usamos List Comprehension para crear una lista limpia solo con numeros float
+        # Esto nos permite hacer calculos matematicos despues
+        voltajes = [float(x['voltaje']) for x in lista_lecturas]
+
+        # Calculo estadistico: suma total dividida por cantidad de elementos
+        promedio = sum(voltajes) / len(voltajes)
+
+        # --- PASO 4: LOGICA DE ESTADO (Detectar eventos en el tiempo) ---
+        falla_detectada = False  # Bandera (flag) que inicia asumiento que todo esta bien
+        contador_bajo = 0        # Variable de estado: cuenta lecturas seguidas problematicas
+
+        for v in voltajes:       # Recorremos cronologicamente los voltajes de ESTE dron
+            if v < 10.0:         # ¿El voltaje es bajo?
+                contador_bajo += 1  # Si, aumentamos la racha
+            else:
+                contador_bajo = 0   # No, el voltaje es bueno. La racha se rompe (reset)
+
+            # Verificamos si la racha alcanzo el limite critico (3 veces seguidas)
+            if contador_bajo >= 3:
+                falla_detectada = True  # Activamos la bandera de alerta
+                break  # Opcional: Salimos del bucle porque ya confirmamos el fallo
+
+        # Empaquetamos los resultados de este dron en un diccionario limpio
+        reporte_final.append({
+            'id': d_id,
+            'voltaje_promedio': round(promedio, 2), # Redondeamos a 2 decimales
+            'estado': 'CRITICO' if falla_detectada else 'OK' # Operador ternario para texto
+        })
+
+    # --- PASO 5: EXPORTACION (Mostrar resultados) ---
+    print("Reporte Generado:")
+    for fila in reporte_final:
+        print(fila) # En el taller, aqui usarian csv.DictWriter
+
+if __name__ == '__main__':
+    main()
+\end{lstlisting}
+
+\subsection{Análisis del Flujo}
+Si ejecutamos el código anterior, para el dron \texttt{D01} la secuencia de voltajes es: $[12.5, 9.0, 8.5, 9.5]$.
+\begin{itemize}
+    \item $12.5$ (Contador = 0)
+    \item $9.0$ (Contador = 1)
+    \item $8.5$ (Contador = 2)
+    \item $9.5$ (Contador = 3) $\rightarrow$ \textbf{¡Alerta Activada!}
+\end{itemize}
+
+Este mismo esquema mental es el que utilizará para el Taller 02, sustituyendo los voltajes por \textit{temperatura} y ajustando el umbral de tiempo (que en su caso serán 12 lecturas equivalentes a 1 hora).
+
+% ===============================================================
+\newpage
+
+\section{Introducción a LaTeX: Documentos Profesionales en Ingeniería}
+
+A partir de esta semana, entregarás tus reportes en \textbf{LaTeX} en lugar de editores visuales como Word o Google Docs. ¿Por qué? Porque LaTeX es el estándar en publicaciones científicas, ingeniería y documentación técnica.
+
+\subsection{¿Qué es LaTeX?}
+
+LaTeX es un \textit{sistema de composición de documentos} basado en texto plano. A diferencia de los editores "WYSIWYG" (What You See Is What You Get), en LaTeX \textbf{describes} cómo debe verse el documento mediante comandos, y el sistema lo compila automáticamente en un PDF profesional.
+
+Piensa en LaTeX como \textbf{código para documentos}:
+\begin{itemize}
+    \item Escribes instrucciones en un archivo \texttt{.tex} (texto plano).
+    \item El compilador \texttt{xelatex} o \texttt{pdflatex} las convierte en un PDF final.
+    \item El resultado es consistente, elegante y reproducible.
+\end{itemize}
+
+\subsection{LaTeX vs. Editores tradicionales}
+
+\begin{center}
+\begin{tabular}{@{}p{6cm}p{6cm}@{}}
+\toprule
+\textbf{Editor visual (Word/Docs)} & \textbf{LaTeX} \\
+\midrule
+Formato manual (click en cada elemento) & Formato automático por comandos \\
+Las fórmulas se descuadran al editar & Las fórmulas siempre quedan perfectas \\
+Referencias a figuras hay que actualizarlas a mano & Referencias se actualizan automáticamente \\
+Difícil versionar cambios & Compatible con Git (texto plano) \\
+Cada colaborador puede cambiar el formato & El formato es consistente por diseño \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{¿Por qué LaTeX en este curso?}
+
+En ingeniería de software e inteligencia artificial, necesitas documentar:
+\begin{itemize}
+    \item \textbf{Código fuente} con sintaxis resaltada.
+    \item \textbf{Fórmulas matemáticas} (como funciones de costo en Machine Learning).
+    \item \textbf{Tablas con resultados} de experimentos o datasets.
+    \item \textbf{Gráficos y diagramas} referenciados automáticamente.
+\end{itemize}
+
+LaTeX maneja todo esto de forma profesional y estandarizada. Además, tus reportes quedan \textbf{versionados en Git} junto con tu código, permitiendo rastrear cambios históricos.
+
+\subsection{Tu primer documento LaTeX}
+
+Un documento mínimo tiene esta estructura:
+
+\begin{lstlisting}[language=TeX, caption={Estructura básica de LaTeX}]
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+
+\title{Reporte de Análisis de Sensores}
+\author{Tu Nombre}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción}
+Este reporte presenta el análisis de 1440 lecturas de sensores agrícolas.
+
+\section{Resultados}
+Se detectaron 3 periodos críticos de temperatura superior a 30°C.
+
+\end{document}
+\end{lstlisting}
+
+Al compilar con \texttt{xelatex reporte.tex}, obtienes un PDF profesional con:
+\begin{itemize}
+    \item Portada automática.
+    \item Numeración de secciones.
+    \item Márgenes, tipografía y espaciado estandarizados.
+\end{itemize}
+
+\subsection{Compilación en Codespaces}
+
+En tu entorno de desarrollo ejecutas:
+
+\begin{lstlisting}[language=bash]
+xelatex reporte.tex
+\end{lstlisting}
+
+Esto genera \texttt{reporte.pdf} junto con archivos auxiliares (\texttt{.aux}, \texttt{.log}). Solo el \texttt{.tex} y el \texttt{.pdf} se versiona en Git [web:41].
+
+\subsection{Ventajas para ingenieros de datos}
+
+\begin{itemize}
+    \item \textbf{Reproducibilidad}: El mismo \texttt{.tex} genera el mismo PDF en cualquier sistema.
+    \item \textbf{Versionamiento}: Git muestra cambios línea por línea en el código LaTeX.
+    \item \textbf{Automatización}: Puedes generar reportes desde scripts Python insertando resultados dinámicamente.
+    \item \textbf{Profesionalismo}: Papers académicos, tesis y documentación técnica usan LaTeX como estándar.
+\end{itemize}
+
+En las próximas semanas aprenderás a incluir tablas de resultados, ecuaciones de modelos y fragmentos de código Python en tus reportes LaTeX.
+
+
+\end{document}
