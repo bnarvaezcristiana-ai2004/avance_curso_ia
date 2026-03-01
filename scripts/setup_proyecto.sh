@@ -1,26 +1,40 @@
 #!/usr/bin/env bash
+# =====================================================
+# Script: setup_proyecto.sh
+# Descripción: Automatiza estructura, descarga y validación
+# =====================================================
+
+# Modo estricto: falla si hay error
 set -euo pipefail
 
-# 1. Crear estructura (redundancia de seguridad)
+echo ">>> Iniciando setup del proyecto..."
+
+# 1. Crear estructura de carpetas
 mkdir -p data/raw data/processed scripts reports
 
-# 2. Descargar datos (NOTA: Cambia la URL por una real si tienes una)
-# Si no tienes URL, puedes comentar la línea de curl y copiar manualmente un archivo a data/raw
-DATA_URL="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv" # Ejemplo genérico
+# 2. Variables de descarga
+DATA_URL="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
 DATA_FILE="data/raw/datos_sensores.csv"
 
+# 3. Descargar solo si no existe (Idempotencia)
 if [ ! -f "$DATA_FILE" ]; then
-  echo "Descargando datos..."
-  # Usamos curl -L para seguir redirecciones si es necesario
-  curl -L -o "$DATA_FILE" "$DATA_URL"
+    echo ">>> Descargando datos desde GitHub..."
+    curl -L -o "$DATA_FILE" "$DATA_URL"
+else
+    echo ">>> Los datos ya existen, saltando descarga."
 fi
 
-# 3. Validar datos y generar reporte
-echo "=== Reporte de Validación ===" > reports/validacion_inicial.txt
-echo "Fecha: $(date)" >> reports/validacion_inicial.txt
-echo "Filas: $(wc -l < $DATA_FILE)" >> reports/validacion_inicial.txt
-echo "Columnas: $(head -n1 $DATA_FILE | tr ',' '\n' | wc -l)" >> reports/validacion_inicial.txt
-# El '|| true' evita que el script falle si no encuentra ",,"
-echo "Valores faltantes: $(grep -c ",," $DATA_FILE || true)" >> reports/validacion_inicial.txt
+# 4. Generar reporte de validación
+echo ">>> Generando reporte..."
+REPORT_FILE="reports/validacion_inicial.txt"
+{
+    echo "=== REPORTE DE VALIDACIÓN ==="
+    echo "Fecha: $(date)"
+    echo "Archivo: $DATA_FILE"
+    echo "Tamaño: $(du -h "$DATA_FILE" | cut -f1)"
+    echo "Filas totales: $(wc -l < "$DATA_FILE")"
+    echo "Columnas detectadas: $(head -n1 "$DATA_FILE" | tr ',' '\n' | wc -l)"
+    echo "Valores vacíos: $(grep -c ',,' "$DATA_FILE" || echo 0)"
+} > "$REPORT_FILE"
 
-echo "Setup completado. Ver reports/validacion_inicial.txt"
+echo ">>> Setup completado. Revisa $REPORT_FILE"
