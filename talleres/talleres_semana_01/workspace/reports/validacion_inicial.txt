@@ -1,0 +1,13 @@
+=== Reporte de Validación Inicial (Semana 1) ===
+Fecha: dom 01 mar 2026 13:12:16 -05
+Archivo: data/raw/sensores.csv
+Filas (incluye header): 6
+Columnas: 4
+Faltantes (patrón ',,'): 1
+
+Muestra (primeras 5 líneas):
+id_sensor,fecha,temperatura,humedad
+SENSOR_01,2026-01-01 00:00:00,24.1,60
+SENSOR_01,2026-01-01 00:01:00,24.0,61
+SENSOR_02,2026-01-01 00:00:00,25.3,55
+SENSOR_03,2026-01-01 00:00:00,23.7,,
